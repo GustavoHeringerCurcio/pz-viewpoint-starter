@@ -1,0 +1,253 @@
+param(
+    [switch]$CheckOnly,
+    [switch]$SkipMods,
+    [switch]$SkipZombieBuddy,
+    [switch]$NoActivate,
+    [switch]$ForceRedownload
+)
+
+$ErrorActionPreference = 'Stop'
+. (Join-Path $PSScriptRoot 'Common.ps1')
+
+function Write-Step([string]$Text) {
+    Write-Host ""
+    Write-Host "== $Text ==" -ForegroundColor Cyan
+}
+
+function Backup-GameFiles([string]$PZ, [string]$Zomboid) {
+    $stamp = Get-Date -Format 'yyyyMMdd-HHmmss'
+    $dst = Join-Path $Zomboid "backups\setup-$stamp"
+    New-Item -ItemType Directory -Path $dst -Force | Out-Null
+    foreach ($name in @('ProjectZomboid64.json','ProjectZomboid64.bat','options.ini')) {
+        $src = Join-Path $PZ $name
+        if (Test-Path -LiteralPath $src) { Copy-Item -LiteralPath $src -Destination (Join-Path $dst $name) -Force }
+    }
+    $default = Join-Path $Zomboid 'mods\default.txt'
+    if (Test-Path -LiteralPath $default) { Copy-Item -LiteralPath $default -Destination (Join-Path $dst 'default.txt') -Force }
+    Write-Host "Backup: $dst" -ForegroundColor DarkGray
+}
+
+function Get-SteamCmd {
+    $tools = Join-Path $env:LOCALAPPDATA 'PZViewpoint\steamcmd'
+    $exe = Join-Path $tools 'steamcmd.exe'
+    if (Test-Path -LiteralPath $exe) { return $exe }
+
+    Write-Host "Baixando SteamCMD..." -ForegroundColor Yellow
+    New-Item -ItemType Directory -Path $tools -Force | Out-Null
+    $zip = Join-Path $tools 'steamcmd.zip'
+    Invoke-WebRequest -Uri 'https://steamcdn-a.akamaihd.net/client/installer/steamcmd.zip' -OutFile $zip -UseBasicParsing
+    Expand-Archive -LiteralPath $zip -DestinationPath $tools -Force
+    if (-not (Test-Path -LiteralPath $exe)) { throw 'Nao foi possivel instalar o SteamCMD.' }
+    return $exe
+}
+
+function Install-WorkshopItems {
+    param(
+        [string]$ManifestPath,
+        [string]$SteamCmd,
+        [switch]$Force
+    )
+
+    $data = Get-Content -LiteralPath $ManifestPath -Raw | ConvertFrom-Json
+    $ids = @()
+    foreach ($p in Get-PackOrder) {
+        foreach ($m in $data.$p) {
+            if ($ids -notcontains $m.Workshop) { $ids += $m.Workshop }
+        }
+    }
+
+    $cacheRoot = Get-WorkshopCacheRoot
+    $gameRoot = Get-WorkshopRoot
+    $srcRoot = Join-Path (Split-Path $SteamCmd -Parent) 'steamapps\workshop\content\108600'
+    $missing = @()
+
+    foreach ($id in $ids) {
+        $cache = Join-Path $cacheRoot $id
+        if (-not $Force -and (Test-Path -LiteralPath $cache)) { continue }
+
+        $source = $null
+        foreach ($candidate in @((Join-Path $srcRoot $id), (Join-Path $gameRoot $id))) {
+            if (Test-Path -LiteralPath $candidate) { $source = $candidate; break }
+        }
+        if (-not $source) { $missing += $id; continue }
+
+        if (Test-Path -LiteralPath $cache) { Remove-Item -LiteralPath $cache -Recurse -Force }
+        robocopy $source $cache /E /MT:8 /R:1 /W:1 /NFL /NDL /NJH /NJS /NP | Out-Null
+        if ($LASTEXITCODE -ge 8) { $missing += $id }
+    }
+
+    if ($missing.Count -gt 0) {
+        Write-Host "Baixando $($missing.Count) itens do Workshop. Isso pode demorar." -ForegroundColor Yellow
+        $cmdArgs = @('+login','anonymous')
+        foreach ($id in $missing) { $cmdArgs += @('+workshop_download_item','108600',$id) }
+        $cmdArgs += '+quit'
+        & $SteamCmd @cmdArgs
+
+        $failed = @()
+        foreach ($id in $missing) {
+            $src = Join-Path $srcRoot $id
+            $cache = Join-Path $cacheRoot $id
+            if (-not (Test-Path -LiteralPath $src)) { $failed += $id; continue }
+            if (Test-Path -LiteralPath $cache) { Remove-Item -LiteralPath $cache -Recurse -Force }
+            robocopy $src $cache /E /MT:8 /R:1 /W:1 /NFL /NDL /NJH /NJS /NP | Out-Null
+            if ($LASTEXITCODE -ge 8) { $failed += $id }
+        }
+
+        if ($failed.Count -gt 0) {
+            Write-Warning "Itens que falharam: $($failed -join ', ')"
+            Write-Warning "Rode Install.bat de novo. Se continuar, assine esses itens na Steam."
+        } else {
+            Write-Host "Workshop concluido." -ForegroundColor Green
+        }
+    } else {
+        Write-Host "Todos os $($ids.Count) itens Workshop ja estao no cache local." -ForegroundColor Green
+    }
+}
+
+function Test-ZombieBuddyInstalled {
+    param([string]$PZ)
+    $hasJar = Test-Path -LiteralPath (Join-Path $PZ 'ZombieBuddy.jar')
+    $hasDll = Test-Path -LiteralPath (Join-Path $PZ 'zbNative.dll')
+    $json = Join-Path $PZ 'ProjectZomboid64.json'
+    $hasAgent = $false
+    if (Test-Path -LiteralPath $json) {
+        $hasAgent = (Get-Content -LiteralPath $json -Raw) -match 'agentlib:zbNative'
+    }
+    return ($hasJar -and $hasDll -and $hasAgent)
+}
+
+function Install-ZombieBuddy {
+    param([string]$PZ)
+
+    if (Test-ZombieBuddyInstalled -PZ $PZ) {
+        Write-Host "ZombieBuddy ja esta instalado." -ForegroundColor Green
+        return
+    }
+
+    Write-Host "Baixando o instalador do ZombieBuddy..." -ForegroundColor Yellow
+    $release = Invoke-RestMethod -Uri 'https://api.github.com/repos/zed-0xff/ZombieBuddy/releases/latest' -Headers @{ 'User-Agent' = 'pz-viewpoint-starter' }
+    $asset = $release.assets | Where-Object { $_.name -like 'ZombieBuddyInstaller_*.exe' } | Select-Object -First 1
+    if (-not $asset) { throw 'Instalador do ZombieBuddy nao encontrado no GitHub.' }
+
+    $installer = Join-Path $env:TEMP $asset.name
+    Invoke-WebRequest -Uri $asset.browser_download_url -OutFile $installer -UseBasicParsing
+    if ($asset.digest) {
+        $expected = $asset.digest -replace '^sha256:', ''
+        $actual = (Get-FileHash -LiteralPath $installer -Algorithm SHA256).Hash.ToLower()
+        if ($actual -ne $expected.ToLower()) { throw 'Hash do instalador do ZombieBuddy nao confere.' }
+    }
+
+    Write-Host ""
+    Write-Host "O instalador do ZombieBuddy vai abrir." -ForegroundColor Cyan
+    Write-Host "No terminal dele:" -ForegroundColor Cyan
+    Write-Host "  1) escreve 1 e Enter  (Install ZombieBuddy)" -ForegroundColor White
+    Write-Host "  2) escreve 1 e Enter  (Both)" -ForegroundColor White
+    Write-Host "  3) se pedir confirmacao, escreve y e Enter" -ForegroundColor White
+    Write-Host ""
+    Start-Process -FilePath $installer -Wait
+
+    if (-not (Test-ZombieBuddyInstalled -PZ $PZ)) {
+        throw 'ZombieBuddy nao foi instalado. Rode Install.bat de novo e escolha 1 e depois 1.'
+    }
+    Write-Host "ZombieBuddy instalado." -ForegroundColor Green
+}
+
+function Set-GameConfig {
+    param([string]$PZ, [string]$Zomboid)
+
+    $jsonPath = Join-Path $PZ 'ProjectZomboid64.json'
+    if (Test-Path -LiteralPath $jsonPath) {
+        $json = Get-Content -LiteralPath $jsonPath -Raw | ConvertFrom-Json
+        $vm = @($json.vmArgs)
+        if (-not ($vm -match '^-Xmx')) { $vm += '-Xmx8192m' }
+        else { $vm = $vm | ForEach-Object { if ($_ -match '^-Xmx') { '-Xmx8192m' } else { $_ } } }
+        if (-not ($vm -match 'agentlib:zbNative')) { $vm = @('-agentlib:zbNative') + $vm }
+        $json.vmArgs = $vm
+        $json | ConvertTo-Json -Depth 10 | Set-Content -LiteralPath $jsonPath -Encoding UTF8
+    }
+
+    $batPath = Join-Path $PZ 'ProjectZomboid64.bat'
+    if (Test-Path -LiteralPath $batPath) {
+        $bat = Get-Content -LiteralPath $batPath -Raw
+        if ($bat -notmatch 'agentlib:zbNative') {
+            $bat = $bat -replace 'SET _JAVA_OPTIONS=.*', 'SET _JAVA_OPTIONS=-agentlib:zbNative'
+        }
+        $bat = $bat -replace '-Xmx\d+m', '-Xmx8192m'
+        Set-Content -LiteralPath $batPath -Value $bat -Encoding ASCII -NoNewline
+    }
+
+    $options = Join-Path $Zomboid 'options.ini'
+    if (Test-Path -LiteralPath $options) {
+        $ini = Get-Content -LiteralPath $options -Raw
+        if ($ini -match 'textureCompression=') { $ini = $ini -replace 'textureCompression=false', 'textureCompression=true' }
+        else { $ini = $ini.TrimEnd() + "`r`ntextureCompression=true`r`n" }
+        Set-Content -LiteralPath $options -Value $ini -Encoding ASCII -NoNewline
+    }
+}
+
+try {
+    $pz = Get-PZPath
+    $zomboid = Get-ZomboidDir
+    $workshop = Get-WorkshopRoot
+
+    Write-Step 'Project Zomboid'
+    Write-Host "Jogo: $pz"
+    Write-Host "Dados: $zomboid"
+    Write-Host "Workshop: $workshop"
+
+    $data = Get-PZWorkshopManifest -ScriptRoot $PSScriptRoot
+    $allIds = @()
+    foreach ($p in Get-PackOrder) { foreach ($m in $data.$p) { if ($allIds -notcontains $m.Workshop) { $allIds += $m.Workshop } } }
+
+    if ($CheckOnly) {
+        Write-Host ""
+        Write-Host "CheckOnly: $($allIds.Count) itens no manifesto."
+        Write-Host "ZombieBuddy instalado: $(Test-ZombieBuddyInstalled -PZ $pz)"
+        $default = Join-Path $zomboid 'mods\default.txt'
+        if (Test-Path -LiteralPath $default) {
+            Write-Host "Mods no default.txt: $((Select-String -LiteralPath $default -Pattern '^\s*mod\s*=').Count)"
+        } else {
+            Write-Host "default.txt ainda nao existe."
+        }
+        exit 0
+    }
+
+    if (-not (Test-IsAdmin)) { throw 'Abre o Install.bat e aceita o pedido de administrador.' }
+    Assert-GameClosed
+
+    Backup-GameFiles -PZ $pz -Zomboid $zomboid
+
+    if (-not $SkipMods) {
+        Write-Step 'Baixando mods do Workshop'
+        $steamcmd = Get-SteamCmd
+        Install-WorkshopItems -ManifestPath (Join-Path $PSScriptRoot 'pack-manifest.json') -SteamCmd $steamcmd -Force:$ForceRedownload
+    } else {
+        Write-Host "Download de mods ignorado." -ForegroundColor Yellow
+    }
+
+    if (-not $SkipZombieBuddy) {
+        Write-Step 'Instalando ZombieBuddy'
+        Install-ZombieBuddy -PZ $pz
+    } else {
+        Write-Host "ZombieBuddy ignorado." -ForegroundColor Yellow
+    }
+
+    Write-Step 'Ajustando o jogo'
+    Set-GameConfig -PZ $pz -Zomboid $zomboid
+
+    if (-not $NoActivate) {
+        Write-Step 'Ativando todos os packs'
+        & (Join-Path $PSScriptRoot 'Activate-Pack.ps1') -All
+    }
+
+    Write-Host ""
+    Write-Host "TUDO PRONTO." -ForegroundColor Green
+    Write-Host "Abre o Project Zomboid e cria um mundo novo." -ForegroundColor White
+    Write-Host "Controles: O = primeira pessoa, Shift+O = terceira, MMB = cursor, I = inventario, V = ADS, G = arremessar." -ForegroundColor White
+    Write-Host "Se algo falhar, leia o README.txt ou o console.txt em $zomboid." -ForegroundColor White
+} catch {
+    Write-Host ""
+    Write-Host "ERRO: $($_.Exception.Message)" -ForegroundColor Red
+    Write-Host "Leia o README.txt e tente de novo." -ForegroundColor Yellow
+    exit 1
+}

@@ -1,0 +1,6 @@
+*.log
+*.zip
+temp/
+tools/
+steamcmd/
+ViewpointPacks/

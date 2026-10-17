@@ -1,0 +1,256 @@
+﻿{
+    "Pack1_Core":  [
+                       {
+                           "Folder":  "ZombieBuddy",
+                           "Workshop":  "3619862853",
+                           "ModID":  "ZombieBuddy",
+                           "ServerOnly":  false
+                       },
+                       {
+                           "Folder":  "Viewpoint",
+                           "Workshop":  "3809306528",
+                           "ModID":  "Viewpoint",
+                           "ServerOnly":  false
+                       },
+                       {
+                           "Folder":  "PZVoxelStudioViewpoint",
+                           "Workshop":  "3810302175",
+                           "ModID":  "PZVoxelStudioViewpoint",
+                           "ServerOnly":  false
+                       },
+                       {
+                           "Folder":  "ViewpointUI",
+                           "Workshop":  "3812616893",
+                           "ModID":  "ViewpointUI",
+                           "ServerOnly":  false
+                       }
+                   ],
+    "Pack2_Tactical":  [
+                           {
+                               "Folder":  "ViewpointAdvancedMovement",
+                               "Workshop":  "3812702301",
+                               "ModID":  "ViewpointAdvancedMovement",
+                               "ServerOnly":  false
+                           },
+                           {
+                               "Folder":  "ViewpointAdvancedMovementServer",
+                               "Workshop":  "3812702301",
+                               "ModID":  "ViewpointAdvancedMovementServer",
+                               "ServerOnly":  true
+                           },
+                           {
+                               "Folder":  "ViewpointEquipmentOverlays",
+                               "Workshop":  "3813230118",
+                               "ModID":  "ViewpointEquipmentOverlays",
+                               "ServerOnly":  false
+                           },
+                           {
+                               "Folder":  "ViewpointAdvancedThrowables",
+                               "Workshop":  "3813194971",
+                               "ModID":  "ViewpointAdvancedThrowables",
+                               "ServerOnly":  false
+                           },
+                           {
+                               "Folder":  "ViewpointTrueBallistics",
+                               "Workshop":  "3812864848",
+                               "ModID":  "ViewpointTrueBallistics",
+                               "ServerOnly":  false
+                           },
+                           {
+                               "Folder":  "ProjectViewpointADS",
+                               "Workshop":  "3812612054",
+                               "ModID":  "ProjectViewpointADS",
+                               "ServerOnly":  false
+                           }
+                       ],
+    "Pack3_Atmosphere":  [
+                             {
+                                 "Folder":  "ViewpointTrueWeathers",
+                                 "Workshop":  "3813908957",
+                                 "ModID":  "ViewpointTrueWeathers",
+                                 "ServerOnly":  false
+                             },
+                             {
+                                 "Folder":  "pz3dMinimap",
+                                 "Workshop":  "3810179295",
+                                 "ModID":  "aparosa_pz3dMinimap",
+                                 "ServerOnly":  false
+                             },
+                             {
+                                 "Folder":  "Authentic Z - Current",
+                                 "Workshop":  "2335368829",
+                                 "ModID":  "Authentic Z - Current",
+                                 "ServerOnly":  false
+                             },
+                             {
+                                 "Folder":  "RainCleansBlood",
+                                 "Workshop":  "2956146279",
+                                 "ModID":  "RainCleansBlood",
+                                 "ServerOnly":  false
+                             },
+                             {
+                                 "Folder":  "ImmersiveBlackouts",
+                                 "Workshop":  "3607686447",
+                                 "ModID":  "ImmersiveBlackouts",
+                                 "ServerOnly":  false
+                             },
+                             {
+                                 "Folder":  "thumpwithfriends",
+                                 "Workshop":  "3504753006",
+                                 "ModID":  "ThumpingWithFriends",
+                                 "ServerOnly":  false
+                             },
+                             {
+                                 "Folder":  "SkullysZombieCollision",
+                                 "Workshop":  "3778511497",
+                                 "ModID":  "SkullysZombieCollision",
+                                 "ServerOnly":  false
+                             },
+                             {
+                                 "Folder":  "CyesPushDoors",
+                                 "Workshop":  "3780683663",
+                                 "ModID":  "CyesPushDoors",
+                                 "ServerOnly":  false
+                             }
+                         ],
+    "Pack4_Survival":  [
+                           {
+                               "Folder":  "Vanilla Foods Expanded",
+                               "Workshop":  "3577903007",
+                               "ModID":  "VanillaFoodsExpanded",
+                               "ServerOnly":  false
+                           },
+                           {
+                               "Folder":  "Take A Bath And Shower New",
+                               "Workshop":  "3592172476",
+                               "ModID":  "TakeABathAndShowerNew",
+                               "ServerOnly":  false
+                           },
+                           {
+                               "Folder":  "Take A Bath And Shower DepthMap Fix",
+                               "Workshop":  "3592172476",
+                               "ModID":  "ATakeABathAndShowerDepthMap",
+                               "ServerOnly":  false
+                           },
+                           {
+                               "Folder":  "RepairAnyClothes",
+                               "Workshop":  "2142622992",
+                               "ModID":  "RepairAnyClothes",
+                               "ServerOnly":  false
+                           },
+                           {
+                               "Folder":  "ZVirusVaccine42BETA",
+                               "Workshop":  "3615135168",
+                               "ModID":  "ZVirusVaccine42BETA",
+                               "ServerOnly":  false
+                           },
+                           {
+                               "Folder":  "LGExtendedPlumbing",
+                               "Workshop":  "3779561845",
+                               "ModID":  "LGExtendedPlumbing",
+                               "ServerOnly":  false
+                           },
+                            {
+                                "Folder":  "damnlib",
+                                "Workshop":  "3171167894",
+                                "ModID":  "damnlib",
+                                "ServerOnly":  false
+                            },
+                            {
+                                "Folder":  "isoContainers",
+                               "Workshop":  "2625625421",
+                               "ModID":  "isoContainers",
+                               "ServerOnly":  false
+                           },
+                           {
+                               "Folder":  "alicesWeaponSling",
+                               "Workshop":  "3775549570",
+                               "ModID":  "alicesWeaponSling",
+                               "ServerOnly":  false
+                           }
+                       ],
+    "Pack5_QoL":  [
+                      {
+                          "Folder":  "DrawOnMap",
+                          "Workshop":  "2804531012",
+                          "ModID":  "DRAW_ON_MAP",
+                          "ServerOnly":  false
+                      },
+                      {
+                          "Folder":  "Skill Recovery Journal",
+                          "Workshop":  "2503622437",
+                          "ModID":  "SkillRecoveryJournal",
+                          "ServerOnly":  false
+                      },
+                      {
+                          "Folder":  "errorMagnifier",
+                          "Workshop":  "2896041179",
+                          "ModID":  "errorMagnifier",
+                          "ServerOnly":  false
+                      },
+                      {
+                          "Folder":  "chuckleberryModdingAlertSystem",
+                          "Workshop":  "3077900375",
+                          "ModID":  "ChuckleberryFinnAlertSystem",
+                          "ServerOnly":  false
+                      },
+                       {
+                           "Folder":  "SpawnSelector",
+                           "Workshop":  "3772052709",
+                           "ModID":  "SpawnSelector",
+                           "ServerOnly":  false
+                       }
+                  ],
+    "Pack6_Extras":  [
+                       {
+                           "Folder":  "[B42] Faster Reading",
+                           "Workshop":  "3713362869",
+                           "ModID":  "Faster Reading",
+                           "ServerOnly":  false
+                       },
+                       {
+                           "Folder":  "ImmersiveDriving",
+                           "Workshop":  "3817413313",
+                           "ModID":  "ImmersiveDriving",
+                           "ServerOnly":  false
+                       },
+                       {
+                           "Folder":  "Visceral",
+                           "Workshop":  "3820965001",
+                           "ModID":  "VisceralViewpoint",
+                           "ServerOnly":  false
+                       },
+                       {
+                           "Folder":  "PZCrossbows",
+                           "Workshop":  "3758880254",
+                           "ModID":  "PZCrossbows",
+                           "ServerOnly":  false
+                       }
+                   ],
+    "Pack7_Immersion":  [
+                       {
+                           "Folder":  "ViewpointImmersiveEffects",
+                           "Workshop":  "3812984535",
+                           "ModID":  "ViewpointImmersiveEffects",
+                           "ServerOnly":  false
+                       },
+                       {
+                           "Folder":  "ViewpointBodycam",
+                           "Workshop":  "3818432217",
+                           "ModID":  "ViewpointBodycam",
+                           "ServerOnly":  false
+                       },
+                       {
+                           "Folder":  "ViewpointVisibleLoot",
+                           "Workshop":  "3818189653",
+                           "ModID":  "ViewpointVisibleLoot",
+                           "ServerOnly":  false
+                       },
+                       {
+                           "Folder":  "ViewpointRoofs",
+                           "Workshop":  "3817294484",
+                           "ModID":  "ViewpointRoofs",
+                           "ServerOnly":  false
+                       }
+                   ]
+}

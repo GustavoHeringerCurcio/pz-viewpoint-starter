@@ -1,0 +1,81 @@
+# PZ Viewpoint Starter
+
+One-click Windows setup for **Project Zomboid Build 42.21** with **Project Viewpoint** first/third-person camera, a Tarkov-style interface, tactical gunplay, and immersion mods.
+
+The repository contains **scripts only**. No mod files are redistributed: the installer downloads every Workshop item with SteamCMD and installs the ZombieBuddy Java loader.
+
+## Requirements
+
+- Windows 10/11
+- Steam + Project Zomboid (Build 42.21)
+- Project Zomboid closed during installation
+- ~2 GB free disk space
+- 16 GB RAM and a GPU with 8 GB VRAM recommended (RX 6600 tested)
+
+## Install
+
+1. Download or clone this repository.
+2. Right-click **`Install.bat`** → **Run as administrator**.
+3. Wait while SteamCMD downloads the Workshop items.
+4. The ZombieBuddy installer opens. Type:
+   - `1` + Enter — Install ZombieBuddy
+   - `1` + Enter — Both launch modes
+   - `y` + Enter if asked to confirm
+5. Launch Project Zomboid and create a **new world**.
+
+## Controls
+
+| Key | Action |
+|---|---|
+| `O` | First person |
+| `Shift + O` | Toggle first/third person |
+| Middle mouse | Capture/release cursor |
+| `I` | Inventory |
+| `H` | Health |
+| `K` | Build |
+| `V` | Aim down sights |
+| `G` | Throw |
+
+## Packs
+
+| Pack | Contents |
+|---|---|
+| `Pack1_Core` | ZombieBuddy, Viewpoint, Voxel Studio, Viewpoint Interface |
+| `Pack2_Tactical` | Advanced Movement, Equipment Overlays, Throwables, True Ballistics, ADS |
+| `Pack3_Atmosphere` | True Weathers, Minimap, Authentic Z, Rain Cleans Blood, Immersive Blackouts, Thump, Collision, Push Doors |
+| `Pack4_Survival` | Vanilla Foods, Bath/Shower, Repair Clothes, Virus Vaccine, Plumbing, damnlib, Containers!, Weapon Sling |
+| `Pack5_QoL` | Draw On The Map, Skill Recovery Journal, errorMagnifier, Mod Update Alert, Spawn Selector |
+| `Pack6_Extras` | Faster Reading, Immersive Driving, Visceral, Simple Crossbows |
+| `Pack7_Immersion` | Immersive Effects, Camera Motion, Visible Loot, Roofs (WIP) |
+
+The installer activates all packs. To test incrementally:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File .\Activate-Pack.ps1 -Pack Pack6_Extras -Cumulative
+powershell -ExecutionPolicy Bypass -File .\Activate-Pack.ps1 -Pack Pack5_QoL -Cumulative
+```
+
+Use `Deactivate-All.bat` to disable the pack.
+
+## Notes
+
+- `default.txt` applies to **new single-player worlds**. For co-op, add the same mods in the Host settings.
+- **Roofs** and **Visible Loot** are WIP.
+- **Camera Motion** and **Roofs** are not multiplayer-tested; disable `Pack7_Immersion` before hosting.
+- Do not combine with Knox Inventory, Tactical Grid Inventory, Equipment UI, CleanUI, Modern Status, or Clean HotBar.
+- If roofs disappear after fast travel, raise `memory.packMiB` in `%USERPROFILE%\Zomboid\viewpoint-live.properties`.
+
+## Troubleshooting
+
+- Read `%USERPROFILE%\Zomboid\console.txt`.
+- Re-run `Install.bat` if a Workshop item failed.
+- If Windows blocks the script: right-click `Install.bat` → Properties → Unblock.
+- ZombieBuddy missing: run `Install.bat` again and choose `1` then `1`.
+
+## Credits
+
+All mods belong to their respective authors. This project only automates downloading and enabling them. Not affiliated with The Indie Stone.
+
+## License
+
+MIT for the scripts in this repository.

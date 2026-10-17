@@ -126,6 +126,12 @@ function Get-WorkshopCacheRoot {
     return $root
 }
 
+function Test-ModInfoFolder {
+    param([string]$Path)
+    if (-not (Test-Path -LiteralPath $Path)) { return $false }
+    return [bool](Get-ChildItem -LiteralPath $Path -Recurse -Filter 'mod.info' -ErrorAction SilentlyContinue | Select-Object -First 1)
+}
+
 function Get-ModSourcePath {
     param(
         [string]$Workshop,

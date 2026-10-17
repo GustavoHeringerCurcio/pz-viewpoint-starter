@@ -8,20 +8,18 @@ $rows     = @()
 
 foreach ($packName in $order) {
     foreach ($m in $data.$packName) {
-        $source = Get-ModSourcePath -Workshop $m.Workshop -Folder $m.Folder
         $active = Join-Path $modsDir $m.Folder
         $info = $null
-        if ($source) {
-            $info = Get-ChildItem -LiteralPath $source -Recurse -Filter 'mod.info' -ErrorAction SilentlyContinue | Select-Object -First 1
+        if (Test-Path -LiteralPath $active) {
+            $info = Get-ChildItem -LiteralPath $active -Recurse -Filter 'mod.info' -ErrorAction SilentlyContinue | Select-Object -First 1
         }
         $rows += [pscustomobject]@{
-            Pack       = $packName
-            Folder     = $m.Folder
-            ModID      = $m.ModID
-            Workshop   = $m.Workshop
-            Baixado    = [bool]$source
-            ModInfo    = [bool]$info
-            Ativo      = (Test-Path -LiteralPath $active)
+            Pack      = $packName
+            Folder    = $m.Folder
+            ModID     = $m.ModID
+            Workshop  = $m.Workshop
+            Instalado = (Test-Path -LiteralPath $active)
+            ModInfo   = [bool]$info
         }
     }
 }
@@ -29,6 +27,8 @@ foreach ($packName in $order) {
 $rows | Format-Table -AutoSize
 
 $default = Join-Path $modsDir 'default.txt'
+$marker = Join-Path $modsDir '.pz-viewpoint-installed'
 Write-Host ""
+Write-Host "Marcador de instalacao: $(Test-Path -LiteralPath $marker)" -ForegroundColor Cyan
 Write-Host "default.txt:" -ForegroundColor Cyan
 if (Test-Path -LiteralPath $default) { Get-Content -LiteralPath $default } else { Write-Host 'MISSING' -ForegroundColor Red }

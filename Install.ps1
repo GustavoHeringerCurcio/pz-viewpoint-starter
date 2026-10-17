@@ -93,14 +93,87 @@ function Test-ArchiveCacheComplete {
     return $true
 }
 
+function Test-ModsInstalled {
+    param([string]$ManifestPath, [switch]$WriteMarker)
+
+    $modsDir = Join-Path (Get-ZomboidDir) 'mods'
+    $marker = Join-Path $modsDir '.pz-viewpoint-installed'
+    if (Test-Path -LiteralPath $marker) {
+        $value = ((Get-Content -LiteralPath $marker -Raw).Trim() -split '\s+')[0]
+        if ($value -ne $ArchiveSha256) { return $false }
+    }
+
+    $data = Get-Content -LiteralPath $ManifestPath -Raw | ConvertFrom-Json
+    foreach ($p in Get-PackOrder) {
+        foreach ($m in $data.$p) {
+            $folder = Join-Path $modsDir $m.Folder
+            if (-not (Test-ModInfoFolder -Path $folder)) { return $false }
+        }
+    }
+
+    if ($WriteMarker) {
+        New-Item -ItemType Directory -Path $modsDir -Force | Out-Null
+        Set-Content -LiteralPath $marker -Value $ArchiveSha256 -Encoding ASCII
+    }
+    return $true
+}
+
+function Move-ArchiveModsToGame {
+    param([string]$ManifestPath, [switch]$Force)
+
+    if (-not $Force -and (Test-ModsInstalled -ManifestPath $ManifestPath -WriteMarker)) {
+        Write-Host "Mods ja estao instalados; movimentacao ignorada." -ForegroundColor Green
+        return
+    }
+
+    $data = Get-Content -LiteralPath $ManifestPath -Raw | ConvertFrom-Json
+    $modsDir = Join-Path (Get-ZomboidDir) 'mods'
+    $cacheRoot = Get-WorkshopCacheRoot
+    $backupRoot = Join-Path (Get-ZomboidDir) 'backups\mods-old'
+    New-Item -ItemType Directory -Path $modsDir -Force | Out-Null
+    New-Item -ItemType Directory -Path $backupRoot -Force | Out-Null
+    $stamp = Get-Date -Format 'yyyyMMdd-HHmmss'
+
+    $total = 0
+    foreach ($p in Get-PackOrder) { $total += $data.$p.Count }
+    $index = 0
+
+    foreach ($p in Get-PackOrder) {
+        foreach ($m in $data.$p) {
+            $index++
+            $src = Join-Path (Join-Path (Join-Path $cacheRoot $m.Workshop) 'mods') $m.Folder
+            $dst = Join-Path $modsDir $m.Folder
+
+            if (-not (Test-ModInfoFolder -Path $src)) {
+                if (Test-ModInfoFolder -Path $dst) {
+                    Write-Host "  [$index/$total] $($m.Folder) ja esta em mods" -ForegroundColor DarkGray
+                    continue
+                }
+                throw "Mod ausente no cache e em mods: $($m.Folder)"
+            }
+
+            if (Test-Path -LiteralPath $dst) {
+                $backup = Join-Path $backupRoot ("{0}-{1}" -f $m.Folder, $stamp)
+                if (Test-Path -LiteralPath $backup) { $backup = "$backup-$index" }
+                Move-Item -LiteralPath $dst -Destination $backup
+                Write-Host "  [$index/$total] backup do antigo: $($m.Folder)" -ForegroundColor DarkGray
+            }
+
+            Move-Item -LiteralPath $src -Destination $dst
+            Write-Host "  [$index/$total] movido: $($m.Folder)" -ForegroundColor DarkGray
+        }
+    }
+
+    if (-not (Test-ModsInstalled -ManifestPath $ManifestPath -WriteMarker)) {
+        throw 'Falha ao confirmar todos os mods em Zomboid\mods.'
+    }
+}
+
 function Install-FromArchive {
     param([string]$ManifestPath)
 
-    $data = Get-Content -LiteralPath $ManifestPath -Raw | ConvertFrom-Json
-    if (-not $ForceRedownload -and (Test-ArchiveCacheComplete -ManifestPath $ManifestPath)) {
-        Write-Host "[1/5] Cache completo; download e extracao ignorados." -ForegroundColor Green
-        Write-Host "[5/5] Conferindo os 39 folders de mods..." -ForegroundColor Yellow
-        Write-Host "Pacote de mods pronto." -ForegroundColor Green
+    if (-not $ForceRedownload -and (Test-ModsInstalled -ManifestPath $ManifestPath -WriteMarker)) {
+        Write-Host "[1/5] Mods ja instalados em Zomboid\mods; nada a fazer." -ForegroundColor Green
         return
     }
 
@@ -109,77 +182,72 @@ function Install-FromArchive {
     $tarPath = Join-Path $archiveDir $ArchiveFileName
     $shaPath = "$tarPath.sha256"
 
-    Write-Host "[1/5] Obtendo hash SHA256..." -ForegroundColor Yellow
-    $expected = $ArchiveSha256
-    if (Test-Path -LiteralPath $shaPath) {
-        $expected = ((Get-Content -LiteralPath $shaPath -Raw).Trim() -split '\s+')[0].ToLower()
+    $cacheComplete = Test-ArchiveCacheComplete -ManifestPath $ManifestPath
+    if ($cacheComplete -and -not $ForceRedownload) {
+        Write-Host "[1/5] Cache completo; download e extracao ignorados." -ForegroundColor Green
     } else {
-        try {
-            Get-RemoteFile -Uri "$ArchiveUrl.sha256" -OutFile $shaPath
+        Write-Host "[1/5] Obtendo hash SHA256..." -ForegroundColor Yellow
+        $expected = $ArchiveSha256
+        if (Test-Path -LiteralPath $shaPath) {
             $expected = ((Get-Content -LiteralPath $shaPath -Raw).Trim() -split '\s+')[0].ToLower()
-        } catch {
-            Write-Warning 'Nao foi possivel baixar o hash; usando o hash embutido no instalador.'
+        } else {
+            try {
+                Get-RemoteFile -Uri "$ArchiveUrl.sha256" -OutFile $shaPath
+                $expected = ((Get-Content -LiteralPath $shaPath -Raw).Trim() -split '\s+')[0].ToLower()
+            } catch {
+                Write-Warning 'Nao foi possivel baixar o hash; usando o hash embutido no instalador.'
+            }
         }
-    }
-    if ($expected -notmatch '^[0-9a-f]{64}$') { $expected = $ArchiveSha256 }
+        if ($expected -notmatch '^[0-9a-f]{64}$') { $expected = $ArchiveSha256 }
 
-    $needDownload = $ForceRedownload -or -not (Test-Path -LiteralPath $tarPath)
-    if (-not $needDownload) {
-        $current = (Get-FileHash -LiteralPath $tarPath -Algorithm SHA256).Hash.ToLower()
-        if ($current -ne $expected) { $needDownload = $true }
-    }
-
-    if ($needDownload) {
-        if (Test-Path -LiteralPath $tarPath) { Remove-Item -LiteralPath $tarPath -Force }
-        Write-Host "[2/5] Baixando pacote de mods do GitHub..." -ForegroundColor Yellow
-        Write-Host "      Repo:   github.com/GustavoHeringerCurcio/pz-viewpoint-starter"
-        Write-Host "      Release: mods-v1"
-        Write-Host "      Arquivo: PZ-Viewpoint-Mods.tar (~1.1 GB)"
-        Write-Host "      Destino: $tarPath"
-        $downloadTimer = [Diagnostics.Stopwatch]::StartNew()
-        Get-RemoteFile -Uri $ArchiveUrl -OutFile $tarPath -ShowProgress
-        $downloadTimer.Stop()
-        Write-Host "Download concluido em $([math]::Round($downloadTimer.Elapsed.TotalMinutes,1)) min." -ForegroundColor Green
-    } else {
-        Write-Host "[2/5] Pacote ja esta no cache local; download ignorado." -ForegroundColor Green
-    }
-
-    Write-Host "[3/5] Validando SHA256..." -ForegroundColor Yellow
-    $actual = (Get-FileHash -LiteralPath $tarPath -Algorithm SHA256).Hash.ToLower()
-    if ($actual -ne $expected) { throw 'Hash do pacote de mods nao confere.' }
-
-    Write-Host "[4/5] Extraindo pacote (pode levar 1-3 minutos)..." -ForegroundColor Yellow
-    $cacheParent = Split-Path (Get-WorkshopCacheRoot) -Parent
-    if (-not (Get-Command tar.exe -ErrorAction SilentlyContinue)) {
-        throw 'tar.exe nao encontrado. Atualiza o Windows 10/11.'
-    }
-    $extractTimer = [Diagnostics.Stopwatch]::StartNew()
-    $tarArgs = '-x -f "{0}" -C "{1}"' -f $tarPath, $cacheParent
-    $tarProcess = Start-Process -FilePath 'tar.exe' -ArgumentList $tarArgs -PassThru -WindowStyle Hidden
-    while (-not $tarProcess.HasExited) {
-        Write-Host "`r      Extraindo... $([int]$extractTimer.Elapsed.TotalSeconds)s   " -NoNewline
-        Start-Sleep -Seconds 1
-        $tarProcess.Refresh()
-    }
-    $tarProcess.WaitForExit()
-    $extractTimer.Stop()
-    Write-Host ""
-    if ($tarProcess.ExitCode -ne 0) { throw "Falha ao extrair o pacote (tar $($tarProcess.ExitCode))." }
-    Write-Host "Extracao concluida em $([math]::Round($extractTimer.Elapsed.TotalMinutes,1)) min." -ForegroundColor Green
-
-    Write-Host "[5/5] Conferindo os 39 folders de mods..." -ForegroundColor Yellow
-    $cacheRoot = Get-WorkshopCacheRoot
-    $missing = @()
-    foreach ($p in Get-PackOrder) {
-        foreach ($m in $data.$p) {
-            $folder = Join-Path (Join-Path (Join-Path $cacheRoot $m.Workshop) 'mods') $m.Folder
-            if (-not (Test-ModInfoFolder -Path $folder)) { $missing += $m.Folder }
+        $needDownload = $ForceRedownload -or -not (Test-Path -LiteralPath $tarPath)
+        if (-not $needDownload) {
+            $current = (Get-FileHash -LiteralPath $tarPath -Algorithm SHA256).Hash.ToLower()
+            if ($current -ne $expected) { $needDownload = $true }
         }
+
+        if ($needDownload) {
+            if (Test-Path -LiteralPath $tarPath) { Remove-Item -LiteralPath $tarPath -Force }
+            Write-Host "[2/5] Baixando pacote de mods do GitHub..." -ForegroundColor Yellow
+            Write-Host "      Repo:   github.com/GustavoHeringerCurcio/pz-viewpoint-starter"
+            Write-Host "      Release: mods-v1"
+            Write-Host "      Arquivo: PZ-Viewpoint-Mods.tar (~1.1 GB)"
+            Write-Host "      Destino: $tarPath"
+            $downloadTimer = [Diagnostics.Stopwatch]::StartNew()
+            Get-RemoteFile -Uri $ArchiveUrl -OutFile $tarPath -ShowProgress
+            $downloadTimer.Stop()
+            Write-Host "Download concluido em $([math]::Round($downloadTimer.Elapsed.TotalMinutes,1)) min." -ForegroundColor Green
+        } else {
+            Write-Host "[2/5] Pacote ja esta no cache local; download ignorado." -ForegroundColor Green
+        }
+
+        Write-Host "[3/5] Validando SHA256..." -ForegroundColor Yellow
+        $actual = (Get-FileHash -LiteralPath $tarPath -Algorithm SHA256).Hash.ToLower()
+        if ($actual -ne $expected) { throw 'Hash do pacote de mods nao confere.' }
+
+        Write-Host "[4/5] Extraindo pacote (pode levar 1-3 minutos)..." -ForegroundColor Yellow
+        $cacheParent = Split-Path (Get-WorkshopCacheRoot) -Parent
+        if (-not (Get-Command tar.exe -ErrorAction SilentlyContinue)) {
+            throw 'tar.exe nao encontrado. Atualiza o Windows 10/11.'
+        }
+        $extractTimer = [Diagnostics.Stopwatch]::StartNew()
+        $tarArgs = '-x -f "{0}" -C "{1}"' -f $tarPath, $cacheParent
+        $tarProcess = Start-Process -FilePath 'tar.exe' -ArgumentList $tarArgs -PassThru -WindowStyle Hidden
+        while (-not $tarProcess.HasExited) {
+            Write-Host "`r      Extraindo... $([int]$extractTimer.Elapsed.TotalSeconds)s   " -NoNewline
+            Start-Sleep -Seconds 1
+            $tarProcess.Refresh()
+        }
+        $tarProcess.WaitForExit()
+        $extractTimer.Stop()
+        Write-Host ""
+        if ($tarProcess.ExitCode -ne 0) { throw "Falha ao extrair o pacote (tar $($tarProcess.ExitCode))." }
+        Write-Host "Extracao concluida em $([math]::Round($extractTimer.Elapsed.TotalMinutes,1)) min." -ForegroundColor Green
     }
-    if ($missing.Count -gt 0) {
-        throw "Pacote incompleto: $($missing -join ', ')"
-    }
-    Write-Host "Pacote de mods pronto." -ForegroundColor Green
+
+    Write-Host "[5/5] Movendo mods do cache para Zomboid\mods..." -ForegroundColor Yellow
+    Move-ArchiveModsToGame -ManifestPath $ManifestPath -Force:$ForceRedownload
+    Write-Host "Mods instalados." -ForegroundColor Green
 }
 
 function Test-CachedWorkshopItem {
@@ -442,6 +510,7 @@ try {
         Write-Host "ZombieBuddy instalado: $(Test-ZombieBuddyInstalled -PZ $pz)"
         $archiveCache = Join-Path (Join-Path (Get-LocalAppData) 'PZViewpoint\archive') $ArchiveFileName
         Write-Host "Pacote GitHub em cache: $(Test-Path -LiteralPath $archiveCache)"
+        Write-Host "Mods ja instalados: $(Test-ModsInstalled -ManifestPath (Join-Path $PSScriptRoot 'pack-manifest.json'))"
         $default = Join-Path $zomboid 'mods\default.txt'
         if (Test-Path -LiteralPath $default) {
             Write-Host "Mods no default.txt: $((Select-String -LiteralPath $default -Pattern '^\s*mod\s*=').Count)"
@@ -462,6 +531,7 @@ try {
             Write-Step 'Baixando mods do Workshop'
             $steamcmd = Get-SteamCmd
             Install-WorkshopItems -ManifestPath (Join-Path $PSScriptRoot 'pack-manifest.json') -SteamCmd $steamcmd -Force:$ForceRedownload
+            Move-ArchiveModsToGame -ManifestPath (Join-Path $PSScriptRoot 'pack-manifest.json') -Force:$ForceRedownload
         } else {
             Write-Step 'Baixando pacote do GitHub'
             try {
@@ -471,6 +541,7 @@ try {
                 Write-Step 'Fallback: SteamCMD'
                 $steamcmd = Get-SteamCmd
                 Install-WorkshopItems -ManifestPath (Join-Path $PSScriptRoot 'pack-manifest.json') -SteamCmd $steamcmd -Force:$ForceRedownload
+                Move-ArchiveModsToGame -ManifestPath (Join-Path $PSScriptRoot 'pack-manifest.json') -Force:$ForceRedownload
             }
         }
     } else {

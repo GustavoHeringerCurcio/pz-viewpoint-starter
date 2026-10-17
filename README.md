@@ -30,6 +30,10 @@ The installer downloads a **single all-in-one mod archive** from this repository
 The installer finds Steam and Project Zomboid in any Steam library. It also
 sets the Java heap automatically based on the PC's RAM.
 
+Mods are moved into `%USERPROFILE%\Zomboid\mods` only once. Later runs of
+`Install.bat` or `Activate-All.bat` do not copy the 1 GB again; activation
+just rewrites `default.txt`.
+
 ## Controls
 
 | Key | Action |

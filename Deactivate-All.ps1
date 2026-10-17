@@ -35,4 +35,6 @@ foreach ($folder in $managed) {
 }
 
 Set-Content -LiteralPath $default -Value @('VERSION = 1,', '', 'mods', '{', '}', '', 'maps', '{', '}', '') -Encoding ASCII
+$marker = Join-Path $modsDir '.pz-viewpoint-installed'
+if (Test-Path -LiteralPath $marker) { Remove-Item -LiteralPath $marker -Force }
 Write-Host "Todos os mods do pack foram desativados." -ForegroundColor Yellow

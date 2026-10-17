@@ -30,6 +30,10 @@ COMO INSTALAR
 O instalador encontra o Steam e o jogo em qualquer biblioteca/disco.
 A memoria do jogo (heap) e ajustada automaticamente pela RAM do PC.
 
+Os mods sao movidos para %USERPROFILE%\Zomboid\mods uma unica vez.
+Depois, Install.bat e Activate-All.bat nao copiam 1 GB de novo; apenas
+reescrevem o default.txt.
+
 CONTROLES
 - O ........ primeira pessoa
 - Shift+O .. alternar primeira/terceira

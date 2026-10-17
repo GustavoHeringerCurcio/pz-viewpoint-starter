@@ -77,6 +77,7 @@ The installer activates everything at once. There is no pack-by-pack mode.
   powershell -ExecutionPolicy Bypass -File .\Install.ps1 -CheckOnly
   ```
 - Re-run `Install.bat` if the GitHub archive failed. If GitHub is blocked, run `Install.ps1 -UseSteamCmd`.
+- If Windows runs it from inside the ZIP, `Install.bat` copies itself to `%LOCALAPPDATA%\PZViewpoint\installer` automatically.
 - If Windows blocks the script: right-click `Install.bat` → Properties → Unblock.
 - If UAC is denied, right-click `Install.bat` → Run as administrator.
 - ZombieBuddy missing: run `Install.bat` again and choose `1` then `1`.

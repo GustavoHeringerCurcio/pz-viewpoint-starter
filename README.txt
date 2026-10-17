@@ -47,6 +47,8 @@ SE DER ERRO
   powershell -ExecutionPolicy Bypass -File .\Install.ps1 -CheckOnly
 - Fecha o jogo e roda Install.bat de novo.
 - Se o GitHub falhar, roda: Install.ps1 -UseSteamCmd
+- Se o Windows rodar direto do ZIP, o Install.bat copia o instalador
+  para %LOCALAPPDATA%\PZViewpoint\installer automaticamente.
 - Se o Windows bloquear o script, clica com o botao direito no
   Install.bat > Propriedades > Desbloquear.
 - Se negar o pedido de administrador, clica com o botao direito no

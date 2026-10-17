@@ -16,7 +16,9 @@ REQUISITOS
 COMO INSTALAR
 1. Extrai esta pasta para um disco local (nao uses pasta de rede).
 2. Da dois cliques em Install.bat. Ele pede permissao de administrador.
-3. Espera baixar o pacote unico (~1.1 GB) do GitHub. Pode demorar.
+3. Espera baixar o pacote unico (~1.1 GB) do Release do GitHub.
+   Ele mostra porcentagem, velocidade e tempo restante.
+   Quando aparecer "Extraindo", o download ja terminou; espere 1-3 min.
 4. O instalador do ZombieBuddy vai abrir. No terminal dele:
    - escreve 1 e Enter  (Install ZombieBuddy)
    - escreve 1 e Enter  (Both)
@@ -47,6 +49,10 @@ SE DER ERRO
   powershell -ExecutionPolicy Bypass -File .\Install.ps1 -CheckOnly
 - Fecha o jogo e roda Install.bat de novo.
 - Se o GitHub falhar, roda: Install.ps1 -UseSteamCmd
+- Download manual (se travar):
+  https://github.com/GustavoHeringerCurcio/pz-viewpoint-starter/releases/download/mods-v1/PZ-Viewpoint-Mods.tar
+  Salva como %LOCALAPPDATA%\PZViewpoint\archive\PZ-Viewpoint-Mods.tar
+  e roda o Install.bat de novo.
 - Se o Windows rodar direto do ZIP, o Install.bat copia o instalador
   para %LOCALAPPDATA%\PZViewpoint\installer automaticamente.
 - Se o Windows bloquear o script, clica com o botao direito no

@@ -39,6 +39,9 @@ if (-not $NoCopy) {
         foreach ($m in $data.$packName) { $selectedFolders += $m.Folder }
     }
     $selectedFolders = $selectedFolders | Select-Object -Unique
+    $totalMods = 0
+    foreach ($packName in $selected) { $totalMods += $data.$packName.Count }
+    $modIndex = 0
 
     foreach ($folder in $managed) {
         if ($selectedFolders -contains $folder) { continue }
@@ -49,6 +52,8 @@ if (-not $NoCopy) {
     foreach ($packName in $selected) {
         Write-Host "Ativando $packName ..." -ForegroundColor Cyan
         foreach ($m in $data.$packName) {
+            $modIndex++
+            Write-Host ("  [{0}/{1}] {2}" -f $modIndex, $totalMods, $m.Folder) -ForegroundColor DarkGray
             $src = Get-ModSourcePath -Workshop $m.Workshop -Folder $m.Folder
             $dst = Join-Path $modsDir $m.Folder
             if (-not $src) {

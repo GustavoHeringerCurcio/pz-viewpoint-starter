@@ -12,6 +12,7 @@ $ErrorActionPreference = 'Stop'
 
 $ArchiveUrl = 'https://github.com/GustavoHeringerCurcio/pz-viewpoint-starter/releases/download/mods-v1/PZ-Viewpoint-Mods.tar'
 $ArchiveFileName = 'PZ-Viewpoint-Mods.tar'
+$ArchiveSha256 = 'f3999811acf25c531772e8d2faf8d20bb4bd0b760b4812dc59eb22d2818a3b5e'
 
 function Write-Step([string]$Text) {
     Write-Host ""
@@ -46,13 +47,30 @@ function Get-SteamCmd {
 }
 
 function Get-RemoteFile {
-    param([string]$Uri, [string]$OutFile)
+    param(
+        [string]$Uri,
+        [string]$OutFile,
+        [switch]$ShowProgress
+    )
+
+    $curl = Get-Command curl.exe -ErrorAction SilentlyContinue
+    if ($curl) {
+        $curlArgs = @('--fail', '--location', '--retry', '3', '--retry-delay', '2', '--output', $OutFile)
+        if ($ShowProgress) { $curlArgs += '--progress-bar' } else { $curlArgs += @('--silent', '--show-error') }
+        $curlArgs += $Uri
+        & $curl.Source @curlArgs
+        if ($LASTEXITCODE -eq 0) { return }
+        Write-Warning "curl falhou ($LASTEXITCODE). Tentando outro metodo..."
+    }
+
     if (Get-Command Start-BitsTransfer -ErrorAction SilentlyContinue) {
         try {
             Start-BitsTransfer -Source $Uri -Destination $OutFile -ErrorAction Stop
             return
         } catch { }
     }
+
+    if ($ShowProgress) { $ProgressPreference = 'Continue' }
     Invoke-WebRequest -Uri $Uri -OutFile $OutFile -UseBasicParsing
 }
 
@@ -70,9 +88,19 @@ function Install-FromArchive {
     $tarPath = Join-Path $archiveDir $ArchiveFileName
     $shaPath = "$tarPath.sha256"
 
-    Write-Host "Baixando verificacao do pacote..." -ForegroundColor Yellow
-    Get-RemoteFile -Uri "$ArchiveUrl.sha256" -OutFile $shaPath
-    $expected = ((Get-Content -LiteralPath $shaPath -Raw).Trim() -split '\s+')[0].ToLower()
+    Write-Host "[1/5] Obtendo hash SHA256..." -ForegroundColor Yellow
+    $expected = $ArchiveSha256
+    if (Test-Path -LiteralPath $shaPath) {
+        $expected = ((Get-Content -LiteralPath $shaPath -Raw).Trim() -split '\s+')[0].ToLower()
+    } else {
+        try {
+            Get-RemoteFile -Uri "$ArchiveUrl.sha256" -OutFile $shaPath
+            $expected = ((Get-Content -LiteralPath $shaPath -Raw).Trim() -split '\s+')[0].ToLower()
+        } catch {
+            Write-Warning 'Nao foi possivel baixar o hash; usando o hash embutido no instalador.'
+        }
+    }
+    if ($expected -notmatch '^[0-9a-f]{64}$') { $expected = $ArchiveSha256 }
 
     $needDownload = $ForceRedownload -or -not (Test-Path -LiteralPath $tarPath)
     if (-not $needDownload) {
@@ -82,21 +110,43 @@ function Install-FromArchive {
 
     if ($needDownload) {
         if (Test-Path -LiteralPath $tarPath) { Remove-Item -LiteralPath $tarPath -Force }
-        Write-Host "Baixando pacote de mods (~1.1 GB) do GitHub..." -ForegroundColor Yellow
-        Get-RemoteFile -Uri $ArchiveUrl -OutFile $tarPath
+        Write-Host "[2/5] Baixando pacote de mods do GitHub..." -ForegroundColor Yellow
+        Write-Host "      Repo:   github.com/GustavoHeringerCurcio/pz-viewpoint-starter"
+        Write-Host "      Release: mods-v1"
+        Write-Host "      Arquivo: PZ-Viewpoint-Mods.tar (~1.1 GB)"
+        Write-Host "      Destino: $tarPath"
+        $downloadTimer = [Diagnostics.Stopwatch]::StartNew()
+        Get-RemoteFile -Uri $ArchiveUrl -OutFile $tarPath -ShowProgress
+        $downloadTimer.Stop()
+        Write-Host "Download concluido em $([math]::Round($downloadTimer.Elapsed.TotalMinutes,1)) min." -ForegroundColor Green
+    } else {
+        Write-Host "[2/5] Pacote ja esta no cache local; download ignorado." -ForegroundColor Green
     }
 
+    Write-Host "[3/5] Validando SHA256..." -ForegroundColor Yellow
     $actual = (Get-FileHash -LiteralPath $tarPath -Algorithm SHA256).Hash.ToLower()
     if ($actual -ne $expected) { throw 'Hash do pacote de mods nao confere.' }
 
-    Write-Host "Extraindo pacote..." -ForegroundColor Yellow
+    Write-Host "[4/5] Extraindo pacote (pode levar 1-3 minutos)..." -ForegroundColor Yellow
     $cacheParent = Split-Path (Get-WorkshopCacheRoot) -Parent
     if (-not (Get-Command tar.exe -ErrorAction SilentlyContinue)) {
         throw 'tar.exe nao encontrado. Atualiza o Windows 10/11.'
     }
-    & tar.exe -x -f $tarPath -C $cacheParent
-    if ($LASTEXITCODE -ne 0) { throw "Falha ao extrair o pacote (tar $LASTEXITCODE)." }
+    $extractTimer = [Diagnostics.Stopwatch]::StartNew()
+    $tarArgs = '-x -f "{0}" -C "{1}"' -f $tarPath, $cacheParent
+    $tarProcess = Start-Process -FilePath 'tar.exe' -ArgumentList $tarArgs -PassThru -WindowStyle Hidden
+    while (-not $tarProcess.HasExited) {
+        Write-Host "`r      Extraindo... $([int]$extractTimer.Elapsed.TotalSeconds)s   " -NoNewline
+        Start-Sleep -Seconds 1
+        $tarProcess.Refresh()
+    }
+    $tarProcess.WaitForExit()
+    $extractTimer.Stop()
+    Write-Host ""
+    if ($tarProcess.ExitCode -ne 0) { throw "Falha ao extrair o pacote (tar $($tarProcess.ExitCode))." }
+    Write-Host "Extracao concluida em $([math]::Round($extractTimer.Elapsed.TotalMinutes,1)) min." -ForegroundColor Green
 
+    Write-Host "[5/5] Conferindo os 39 folders de mods..." -ForegroundColor Yellow
     $data = Get-Content -LiteralPath $ManifestPath -Raw | ConvertFrom-Json
     $cacheRoot = Get-WorkshopCacheRoot
     $missing = @()

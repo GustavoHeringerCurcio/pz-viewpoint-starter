@@ -18,7 +18,7 @@ The installer downloads a **single all-in-one mod archive** from this repository
 
 1. Download or clone this repository to a local folder (not a network share).
 2. Double-click **`Install.bat`**. It requests administrator permission automatically.
-3. Wait while the installer downloads the ~1.1 GB GitHub archive.
+3. Wait while the installer downloads the ~1.1 GB archive from this repository's GitHub Release. It shows percentage, speed, and ETA. Download time depends on the connection; extraction takes another 1-3 minutes.
 4. The ZombieBuddy installer opens. Type:
    - `1` + Enter — Install ZombieBuddy
    - `1` + Enter — Both launch modes
@@ -77,6 +77,9 @@ The installer activates everything at once. There is no pack-by-pack mode.
   powershell -ExecutionPolicy Bypass -File .\Install.ps1 -CheckOnly
   ```
 - Re-run `Install.bat` if the GitHub archive failed. If GitHub is blocked, run `Install.ps1 -UseSteamCmd`.
+- Manual download if the installer download stalls:
+  `https://github.com/GustavoHeringerCurcio/pz-viewpoint-starter/releases/download/mods-v1/PZ-Viewpoint-Mods.tar`
+  Save it as `%LOCALAPPDATA%\PZViewpoint\archive\PZ-Viewpoint-Mods.tar`, then run `Install.bat` again.
 - If Windows runs it from inside the ZIP, `Install.bat` copies itself to `%LOCALAPPDATA%\PZViewpoint\installer` automatically.
 - If Windows blocks the script: right-click `Install.bat` → Properties → Unblock.
 - If UAC is denied, right-click `Install.bat` → Run as administrator.

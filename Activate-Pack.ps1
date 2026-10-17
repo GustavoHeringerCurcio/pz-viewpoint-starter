@@ -1,8 +1,4 @@
 param(
-    [ValidateSet('Pack1_Core','Pack2_Tactical','Pack3_Atmosphere','Pack4_Survival','Pack5_QoL','Pack6_Extras','Pack7_Immersion')]
-    [string]$Pack = 'Pack1_Core',
-    [switch]$Cumulative,
-    [switch]$All,
     [switch]$Server,
     [switch]$NoCopy
 )
@@ -30,14 +26,7 @@ foreach ($p in $order) {
 }
 $managed = $managed | Select-Object -Unique
 
-if ($All) {
-    $selected = $order
-} elseif ($Cumulative) {
-    $idx = [array]::IndexOf($order, $Pack)
-    $selected = $order[0..$idx]
-} else {
-    $selected = @($Pack)
-}
+$selected = $order
 
 if (Test-Path -LiteralPath $default) {
     Copy-Item -LiteralPath $default -Destination (Join-Path $backupDir 'default.txt.bak') -Force

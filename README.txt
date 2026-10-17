@@ -8,7 +8,7 @@ REQUISITOS
 - Windows 10 ou 11
 - Steam + Project Zomboid (Build 42.21)
 - Project Zomboid fechado
-- Cerca de 2 GB livres
+- Cerca de 4 GB livres
 - 8 GB de RAM no minimo, 16 GB recomendado
 - Placa de video com 8 GB de VRAM (recomendado)
 - Qualquer usuario, pasta, disco ou biblioteca Steam em disco local
@@ -16,7 +16,7 @@ REQUISITOS
 COMO INSTALAR
 1. Extrai esta pasta para um disco local (nao uses pasta de rede).
 2. Da dois cliques em Install.bat. Ele pede permissao de administrador.
-3. Espera baixar os mods do Workshop. Pode demorar.
+3. Espera baixar o pacote unico (~1.1 GB) do GitHub. Pode demorar.
 4. O instalador do ZombieBuddy vai abrir. No terminal dele:
    - escreve 1 e Enter  (Install ZombieBuddy)
    - escreve 1 e Enter  (Both)
@@ -36,21 +36,17 @@ CONTROLES
 - V ........ mirar (ADS)
 - G ........ arremessar
 
-TESTAR EM LEVAS
-O instalador ativa todos os packs. Se algo falhar, volta ao pack anterior:
-  Activate-Pack.ps1 -Pack Pack6_Extras -Cumulative
-  Activate-Pack.ps1 -Pack Pack5_QoL -Cumulative
-  Activate-Pack.ps1 -Pack Pack4_Survival -Cumulative
-  Activate-Pack.ps1 -Pack Pack3_Atmosphere -Cumulative
-  Activate-Pack.ps1 -Pack Pack2_Tactical -Cumulative
-  Activate-Pack.ps1 -Pack Pack1_Core
-Tambem podes usar Activate-All.bat e Deactivate-All.bat.
+INSTALAR TUDO DE UMA VEZ
+O instalador ativa todos os mods juntos. Nao existe mais modo por levas.
+  Activate-All.bat .... reaplica a lista completa
+  Deactivate-All.bat .. remove os mods e limpa o default.txt
 
 SE DER ERRO
 - Le C:\Users\<voce>\Zomboid\console.txt
 - Testa os caminhos sem mudar nada:
   powershell -ExecutionPolicy Bypass -File .\Install.ps1 -CheckOnly
 - Fecha o jogo e roda Install.bat de novo.
+- Se o GitHub falhar, roda: Install.ps1 -UseSteamCmd
 - Se o Windows bloquear o script, clica com o botao direito no
   Install.bat > Propriedades > Desbloquear.
 - Se negar o pedido de administrador, clica com o botao direito no
@@ -63,20 +59,19 @@ SE DER ERRO
 MULTIPLAYER
 - Cada amigo precisa rodar o Install.bat no proprio PC.
 - Todos precisam da mesma versao do jogo e dos mesmos mods.
-- O Host deve usar os mesmos packs.
+- O Host deve usar a mesma lista completa de mods.
 - Os mods do default.txt valem para mundos novos single-player. Para
   hospedar co-op, adiciona os mesmos mods nas configuracoes do Host.
-- Viewpoint Roofs e WIP e nao foi testado em multiplayer; para jogar
-  online, desativa o Pack7 primeiro.
+- Viewpoint Roofs e WIP e nao foi testado em multiplayer; remove ele
+  pelo menu Mods antes de hospedar.
 
 NAO USE JUNTO
 Knox Inventory, Tactical Grid Inventory, Equipment UI, CleanUI,
 Modern Status ou Clean HotBar. O Viewpoint Interface ja faz o HUD.
 
 CREDITOS
-Este repositorio contem apenas scripts. Nenhum mod e redistribuido.
-Os mods sao baixados do Steam Workshop/SteamCMD e pertencem aos seus
-autores. Nao afiliado a The Indie Stone.
+O pacote de mods e um espelho de conveniencia hospedado no Release do
+GitHub. Os mods pertencem aos seus autores. Nao afiliado a The Indie Stone.
 
 DESINSTALAR
 - Roda Deactivate-All.bat para desativar os mods.

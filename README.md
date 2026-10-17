@@ -2,14 +2,14 @@
 
 One-click Windows setup for **Project Zomboid Build 42.21** with **Project Viewpoint** first/third-person camera, a Tarkov-style interface, tactical gunplay, and immersion mods.
 
-The repository contains **scripts only**. No mod files are redistributed: the installer downloads every Workshop item with SteamCMD and installs the ZombieBuddy Java loader.
+The installer downloads a **single all-in-one mod archive** from this repository's GitHub Releases and installs the ZombieBuddy Java loader. SteamCMD remains only as a fallback.
 
 ## Requirements
 
 - Windows 10/11
 - Steam + Project Zomboid (Build 42.21)
 - Project Zomboid closed during installation
-- ~2 GB free disk space
+- ~4 GB free disk space
 - 8 GB RAM minimum, 16 GB recommended
 - GPU with 8 GB VRAM recommended (RX 6600 tested)
 - Any Windows username, folder, drive, or Steam library on a local disk
@@ -18,7 +18,7 @@ The repository contains **scripts only**. No mod files are redistributed: the in
 
 1. Download or clone this repository to a local folder (not a network share).
 2. Double-click **`Install.bat`**. It requests administrator permission automatically.
-3. Wait while SteamCMD downloads the Workshop items.
+3. Wait while the installer downloads the ~1.1 GB GitHub archive.
 4. The ZombieBuddy installer opens. Type:
    - `1` + Enter — Install ZombieBuddy
    - `1` + Enter — Both launch modes
@@ -53,20 +53,16 @@ sets the Java heap automatically based on the PC's RAM.
 | `Pack6_Extras` | Faster Reading, Immersive Driving, Visceral, Simple Crossbows |
 | `Pack7_Immersion` | Immersive Effects, Camera Motion, Visible Loot, Roofs (WIP) |
 
-The installer activates all packs. To test incrementally:
+The installer activates everything at once. There is no pack-by-pack mode.
 
-```powershell
-powershell -ExecutionPolicy Bypass -File .\Activate-Pack.ps1 -Pack Pack6_Extras -Cumulative
-powershell -ExecutionPolicy Bypass -File .\Activate-Pack.ps1 -Pack Pack5_QoL -Cumulative
-```
-
-Use `Deactivate-All.bat` to disable the pack.
+- `Activate-All.bat` reapplies the full mod list.
+- `Deactivate-All.bat` removes the installed mods and empties `default.txt`.
 
 ## Notes
 
 - `default.txt` applies to **new single-player worlds**. For co-op, add the same mods in the Host settings.
 - **Roofs** and **Visible Loot** are WIP.
-- **Camera Motion** and **Roofs** are not multiplayer-tested; disable `Pack7_Immersion` before hosting.
+- **Camera Motion** and **Roofs** are not multiplayer-tested; remove them in the Mods menu before hosting.
 - Do not combine with Knox Inventory, Tactical Grid Inventory, Equipment UI, CleanUI, Modern Status, or Clean HotBar.
 - If roofs disappear after fast travel, raise `memory.packMiB` in `%USERPROFILE%\Zomboid\viewpoint-live.properties`.
 
@@ -77,14 +73,14 @@ Use `Deactivate-All.bat` to disable the pack.
   ```powershell
   powershell -ExecutionPolicy Bypass -File .\Install.ps1 -CheckOnly
   ```
-- Re-run `Install.bat` if a Workshop item failed.
+- Re-run `Install.bat` if the GitHub archive failed. If GitHub is blocked, run `Install.ps1 -UseSteamCmd`.
 - If Windows blocks the script: right-click `Install.bat` → Properties → Unblock.
 - If UAC is denied, right-click `Install.bat` → Run as administrator.
 - ZombieBuddy missing: run `Install.bat` again and choose `1` then `1`.
 
 ## Credits
 
-All mods belong to their respective authors. This project only automates downloading and enabling them. Not affiliated with The Indie Stone.
+All mods belong to their respective authors. The release archive is a convenience mirror for this setup; it is not claimed as original work. Not affiliated with The Indie Stone.
 
 ## License
 

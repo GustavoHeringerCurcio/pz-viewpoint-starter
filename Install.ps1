@@ -3,11 +3,15 @@ param(
     [switch]$SkipMods,
     [switch]$SkipZombieBuddy,
     [switch]$NoActivate,
-    [switch]$ForceRedownload
+    [switch]$ForceRedownload,
+    [switch]$UseSteamCmd
 )
 
 $ErrorActionPreference = 'Stop'
 . (Join-Path $PSScriptRoot 'Common.ps1')
+
+$ArchiveUrl = 'https://github.com/GustavoHeringerCurcio/pz-viewpoint-starter/releases/download/mods-v1/PZ-Viewpoint-Mods.tar'
+$ArchiveFileName = 'PZ-Viewpoint-Mods.tar'
 
 function Write-Step([string]$Text) {
     Write-Host ""
@@ -39,6 +43,73 @@ function Get-SteamCmd {
     Expand-Archive -LiteralPath $zip -DestinationPath $tools -Force
     if (-not (Test-Path -LiteralPath $exe)) { throw 'Nao foi possivel instalar o SteamCMD.' }
     return $exe
+}
+
+function Get-RemoteFile {
+    param([string]$Uri, [string]$OutFile)
+    if (Get-Command Start-BitsTransfer -ErrorAction SilentlyContinue) {
+        try {
+            Start-BitsTransfer -Source $Uri -Destination $OutFile -ErrorAction Stop
+            return
+        } catch { }
+    }
+    Invoke-WebRequest -Uri $Uri -OutFile $OutFile -UseBasicParsing
+}
+
+function Test-ModInfoFolder {
+    param([string]$Path)
+    if (-not (Test-Path -LiteralPath $Path)) { return $false }
+    return [bool](Get-ChildItem -LiteralPath $Path -Recurse -Filter 'mod.info' -ErrorAction SilentlyContinue | Select-Object -First 1)
+}
+
+function Install-FromArchive {
+    param([string]$ManifestPath)
+
+    $archiveDir = Join-Path (Get-LocalAppData) 'PZViewpoint\archive'
+    New-Item -ItemType Directory -Path $archiveDir -Force | Out-Null
+    $tarPath = Join-Path $archiveDir $ArchiveFileName
+    $shaPath = "$tarPath.sha256"
+
+    Write-Host "Baixando verificacao do pacote..." -ForegroundColor Yellow
+    Get-RemoteFile -Uri "$ArchiveUrl.sha256" -OutFile $shaPath
+    $expected = ((Get-Content -LiteralPath $shaPath -Raw).Trim() -split '\s+')[0].ToLower()
+
+    $needDownload = $ForceRedownload -or -not (Test-Path -LiteralPath $tarPath)
+    if (-not $needDownload) {
+        $current = (Get-FileHash -LiteralPath $tarPath -Algorithm SHA256).Hash.ToLower()
+        if ($current -ne $expected) { $needDownload = $true }
+    }
+
+    if ($needDownload) {
+        if (Test-Path -LiteralPath $tarPath) { Remove-Item -LiteralPath $tarPath -Force }
+        Write-Host "Baixando pacote de mods (~1.1 GB) do GitHub..." -ForegroundColor Yellow
+        Get-RemoteFile -Uri $ArchiveUrl -OutFile $tarPath
+    }
+
+    $actual = (Get-FileHash -LiteralPath $tarPath -Algorithm SHA256).Hash.ToLower()
+    if ($actual -ne $expected) { throw 'Hash do pacote de mods nao confere.' }
+
+    Write-Host "Extraindo pacote..." -ForegroundColor Yellow
+    $cacheParent = Split-Path (Get-WorkshopCacheRoot) -Parent
+    if (-not (Get-Command tar.exe -ErrorAction SilentlyContinue)) {
+        throw 'tar.exe nao encontrado. Atualiza o Windows 10/11.'
+    }
+    & tar.exe -x -f $tarPath -C $cacheParent
+    if ($LASTEXITCODE -ne 0) { throw "Falha ao extrair o pacote (tar $LASTEXITCODE)." }
+
+    $data = Get-Content -LiteralPath $ManifestPath -Raw | ConvertFrom-Json
+    $cacheRoot = Get-WorkshopCacheRoot
+    $missing = @()
+    foreach ($p in Get-PackOrder) {
+        foreach ($m in $data.$p) {
+            $folder = Join-Path (Join-Path (Join-Path $cacheRoot $m.Workshop) 'mods') $m.Folder
+            if (-not (Test-ModInfoFolder -Path $folder)) { $missing += $m.Folder }
+        }
+    }
+    if ($missing.Count -gt 0) {
+        throw "Pacote incompleto: $($missing -join ', ')"
+    }
+    Write-Host "Pacote de mods pronto." -ForegroundColor Green
 }
 
 function Test-CachedWorkshopItem {
@@ -231,6 +302,8 @@ try {
         Write-Host ""
         Write-Host "CheckOnly: $($allIds.Count) itens no manifesto."
         Write-Host "ZombieBuddy instalado: $(Test-ZombieBuddyInstalled -PZ $pz)"
+        $archiveCache = Join-Path (Join-Path (Get-LocalAppData) 'PZViewpoint\archive') $ArchiveFileName
+        Write-Host "Pacote GitHub em cache: $(Test-Path -LiteralPath $archiveCache)"
         $default = Join-Path $zomboid 'mods\default.txt'
         if (Test-Path -LiteralPath $default) {
             Write-Host "Mods no default.txt: $((Select-String -LiteralPath $default -Pattern '^\s*mod\s*=').Count)"
@@ -247,9 +320,21 @@ try {
     Backup-GameFiles -PZ $pz -Zomboid $zomboid
 
     if (-not $SkipMods) {
-        Write-Step 'Baixando mods do Workshop'
-        $steamcmd = Get-SteamCmd
-        Install-WorkshopItems -ManifestPath (Join-Path $PSScriptRoot 'pack-manifest.json') -SteamCmd $steamcmd -Force:$ForceRedownload
+        if ($UseSteamCmd) {
+            Write-Step 'Baixando mods do Workshop'
+            $steamcmd = Get-SteamCmd
+            Install-WorkshopItems -ManifestPath (Join-Path $PSScriptRoot 'pack-manifest.json') -SteamCmd $steamcmd -Force:$ForceRedownload
+        } else {
+            Write-Step 'Baixando pacote do GitHub'
+            try {
+                Install-FromArchive -ManifestPath (Join-Path $PSScriptRoot 'pack-manifest.json')
+            } catch {
+                Write-Warning "Pacote do GitHub falhou: $($_.Exception.Message)"
+                Write-Step 'Fallback: SteamCMD'
+                $steamcmd = Get-SteamCmd
+                Install-WorkshopItems -ManifestPath (Join-Path $PSScriptRoot 'pack-manifest.json') -SteamCmd $steamcmd -Force:$ForceRedownload
+            }
+        }
     } else {
         Write-Host "Download de mods ignorado." -ForegroundColor Yellow
     }
@@ -265,8 +350,8 @@ try {
     Set-GameConfig -PZ $pz -Zomboid $zomboid
 
     if (-not $NoActivate) {
-        Write-Step 'Ativando todos os packs'
-        & (Join-Path $PSScriptRoot 'Activate-Pack.ps1') -All
+        Write-Step 'Ativando todos os mods'
+        & (Join-Path $PSScriptRoot 'Activate-Pack.ps1')
     }
 
     Write-Host ""

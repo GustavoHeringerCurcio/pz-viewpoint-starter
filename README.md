@@ -47,7 +47,7 @@ sets the Java heap automatically based on the PC's RAM.
 |---|---|
 | `Pack1_Core` | ZombieBuddy, Viewpoint, Voxel Studio, Viewpoint Interface |
 | `Pack2_Tactical` | Advanced Movement, Equipment Overlays, Throwables, True Ballistics, ADS |
-| `Pack3_Atmosphere` | True Weathers, Minimap, Authentic Z, Rain Cleans Blood, Immersive Blackouts, Thump, Collision, Push Doors |
+| `Pack3_Atmosphere` | True Weathers, Minimap, Rain Cleans Blood, Immersive Blackouts, Thump, Collision, Push Doors |
 | `Pack4_Survival` | Vanilla Foods, Bath/Shower, Repair Clothes, Virus Vaccine, Plumbing, damnlib, Containers!, Weapon Sling |
 | `Pack5_QoL` | Draw On The Map, Skill Recovery Journal, errorMagnifier, Mod Update Alert, Spawn Selector |
 | `Pack6_Extras` | Faster Reading, Immersive Driving, Visceral, Simple Crossbows |

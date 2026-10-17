@@ -80,8 +80,29 @@ function Test-ModInfoFolder {
     return [bool](Get-ChildItem -LiteralPath $Path -Recurse -Filter 'mod.info' -ErrorAction SilentlyContinue | Select-Object -First 1)
 }
 
+function Test-ArchiveCacheComplete {
+    param([string]$ManifestPath)
+    $data = Get-Content -LiteralPath $ManifestPath -Raw | ConvertFrom-Json
+    $cacheRoot = Get-WorkshopCacheRoot
+    foreach ($p in Get-PackOrder) {
+        foreach ($m in $data.$p) {
+            $folder = Join-Path (Join-Path (Join-Path $cacheRoot $m.Workshop) 'mods') $m.Folder
+            if (-not (Test-ModInfoFolder -Path $folder)) { return $false }
+        }
+    }
+    return $true
+}
+
 function Install-FromArchive {
     param([string]$ManifestPath)
+
+    $data = Get-Content -LiteralPath $ManifestPath -Raw | ConvertFrom-Json
+    if (-not $ForceRedownload -and (Test-ArchiveCacheComplete -ManifestPath $ManifestPath)) {
+        Write-Host "[1/5] Cache completo; download e extracao ignorados." -ForegroundColor Green
+        Write-Host "[5/5] Conferindo os 39 folders de mods..." -ForegroundColor Yellow
+        Write-Host "Pacote de mods pronto." -ForegroundColor Green
+        return
+    }
 
     $archiveDir = Join-Path (Get-LocalAppData) 'PZViewpoint\archive'
     New-Item -ItemType Directory -Path $archiveDir -Force | Out-Null
@@ -147,7 +168,6 @@ function Install-FromArchive {
     Write-Host "Extracao concluida em $([math]::Round($extractTimer.Elapsed.TotalMinutes,1)) min." -ForegroundColor Green
 
     Write-Host "[5/5] Conferindo os 39 folders de mods..." -ForegroundColor Yellow
-    $data = Get-Content -LiteralPath $ManifestPath -Raw | ConvertFrom-Json
     $cacheRoot = Get-WorkshopCacheRoot
     $missing = @()
     foreach ($p in Get-PackOrder) {
@@ -246,12 +266,64 @@ function Test-ZombieBuddyInstalled {
     return ($hasJar -and $hasDll -and $hasAgent)
 }
 
+function Get-ZombieBuddyLibrarySource {
+    $candidates = @(
+        (Join-Path (Join-Path (Join-Path (Get-WorkshopCacheRoot) '3619862853') 'mods') 'ZombieBuddy'),
+        (Join-Path (Join-Path (Get-ZomboidDir) 'mods') 'ZombieBuddy')
+    )
+    foreach ($path in $candidates) {
+        if (Test-Path -LiteralPath (Join-Path $path 'libs\ZombieBuddy.jar')) { return $path }
+    }
+    return $null
+}
+
+function Prepare-ZombieBuddyWorkshop {
+    Write-Host "Preparando conteudo do ZombieBuddy para o instalador..." -ForegroundColor Yellow
+    $source = Get-ZombieBuddyLibrarySource
+    if (-not $source) { return $false }
+
+    $workshopRoot = Ensure-WorkshopRoot
+    $destination = Join-Path (Join-Path (Join-Path $workshopRoot '3619862853') 'mods') 'ZombieBuddy'
+    $destinationJar = Join-Path $destination 'libs\ZombieBuddy.jar'
+    $destinationDll = Join-Path $destination 'libs\zbNative.dll'
+    if ((Test-Path -LiteralPath $destinationJar) -and (Test-Path -LiteralPath $destinationDll)) {
+        return $true
+    }
+
+    New-Item -ItemType Directory -Path (Split-Path $destination -Parent) -Force | Out-Null
+    robocopy $source $destination /E /MT:8 /R:1 /W:1 /NFL /NDL /NJH /NJS /NP | Out-Null
+    if ($LASTEXITCODE -ge 8) { return $false }
+
+    return ((Test-Path -LiteralPath $destinationJar) -and (Test-Path -LiteralPath $destinationDll))
+}
+
+function Install-ZombieBuddyManually {
+    param([string]$PZ, [string]$Zomboid)
+
+    $source = Get-ZombieBuddyLibrarySource
+    if (-not $source) { throw 'Arquivos do ZombieBuddy nao encontrados no cache.' }
+
+    Copy-Item -LiteralPath (Join-Path $source 'libs\ZombieBuddy.jar') -Destination (Join-Path $PZ 'ZombieBuddy.jar') -Force
+    Copy-Item -LiteralPath (Join-Path $source 'libs\zbNative.dll') -Destination (Join-Path $PZ 'zbNative.dll') -Force
+    Set-GameConfig -PZ $PZ -Zomboid $Zomboid
+}
+
 function Install-ZombieBuddy {
-    param([string]$PZ)
+    param([string]$PZ, [string]$Zomboid)
 
     if (Test-ZombieBuddyInstalled -PZ $PZ) {
         Write-Host "ZombieBuddy ja esta instalado." -ForegroundColor Green
         return
+    }
+
+    $prepared = $false
+    try {
+        $prepared = Prepare-ZombieBuddyWorkshop
+    } catch {
+        Write-Warning "Falha ao preparar a Workshop do ZombieBuddy: $($_.Exception.Message)"
+    }
+    if (-not $prepared) {
+        Write-Warning 'Nao consegui preparar a pasta da Workshop do ZombieBuddy; tentando o instalador mesmo assim.'
     }
 
     Write-Host "Baixando o instalador do ZombieBuddy..." -ForegroundColor Yellow
@@ -271,13 +343,19 @@ function Install-ZombieBuddy {
     Write-Host "O instalador do ZombieBuddy vai abrir." -ForegroundColor Cyan
     Write-Host "No terminal dele:" -ForegroundColor Cyan
     Write-Host "  1) escreve 1 e Enter  (Install ZombieBuddy)" -ForegroundColor White
-    Write-Host "  2) escreve 1 e Enter  (Both)" -ForegroundColor White
-    Write-Host "  3) se pedir confirmacao, escreve y e Enter" -ForegroundColor White
+    Write-Host "  2) escreve 2 e Enter  (Normal Launch)" -ForegroundColor White
+    Write-Host "  3) escreve 2 e Enter  (ProjectZomboid64.json)" -ForegroundColor White
+    Write-Host "  4) se pedir confirmacao, escreve y e Enter" -ForegroundColor White
     Write-Host ""
     Start-Process -FilePath $installer -WorkingDirectory (Split-Path $installer -Parent) -Wait
 
     if (-not (Test-ZombieBuddyInstalled -PZ $PZ)) {
-        throw 'ZombieBuddy nao foi instalado. Rode Install.bat de novo e escolha 1 e depois 1.'
+        Write-Warning 'Instalador do ZombieBuddy nao concluiu; aplicando instalacao manual.'
+        Install-ZombieBuddyManually -PZ $PZ -Zomboid $Zomboid
+    }
+
+    if (-not (Test-ZombieBuddyInstalled -PZ $PZ)) {
+        throw 'ZombieBuddy nao foi instalado nem manualmente.'
     }
     Write-Host "ZombieBuddy instalado." -ForegroundColor Green
 }
@@ -287,6 +365,8 @@ function Set-GameConfig {
 
     $heap = Get-RecommendedHeapMB
     $xmx = "-Xmx${heap}m"
+    $agentFiles = (Test-Path -LiteralPath (Join-Path $PZ 'ZombieBuddy.jar')) -and
+                  (Test-Path -LiteralPath (Join-Path $PZ 'zbNative.dll'))
     Write-Host "Memoria do jogo: ${heap} MB" -ForegroundColor DarkGray
 
     $jsonPath = Join-Path $PZ 'ProjectZomboid64.json'
@@ -295,7 +375,11 @@ function Set-GameConfig {
         $vm = @($json.vmArgs)
         if (-not ($vm -match '^-Xmx')) { $vm += $xmx }
         else { $vm = $vm | ForEach-Object { if ($_ -match '^-Xmx') { $xmx } else { $_ } } }
-        if (-not ($vm -match 'agentlib:zbNative')) { $vm = @('-agentlib:zbNative') + $vm }
+        if ($agentFiles) {
+            if (-not ($vm -match 'agentlib:zbNative')) { $vm = @('-agentlib:zbNative') + $vm }
+        } else {
+            $vm = $vm | Where-Object { $_ -notmatch 'agentlib:zbNative' }
+        }
         $json.vmArgs = $vm
         $jsonText = $json | ConvertTo-Json -Depth 10
         [IO.File]::WriteAllText($jsonPath, $jsonText, (New-Object System.Text.UTF8Encoding($false)))
@@ -304,8 +388,12 @@ function Set-GameConfig {
     $batPath = Join-Path $PZ 'ProjectZomboid64.bat'
     if (Test-Path -LiteralPath $batPath) {
         $bat = Get-Content -LiteralPath $batPath -Raw
-        if ($bat -notmatch 'agentlib:zbNative') {
-            $bat = $bat -replace 'SET _JAVA_OPTIONS=.*', 'SET _JAVA_OPTIONS=-agentlib:zbNative'
+        if ($agentFiles) {
+            if ($bat -notmatch 'agentlib:zbNative') {
+                $bat = $bat -replace 'SET _JAVA_OPTIONS=.*', 'SET _JAVA_OPTIONS=-agentlib:zbNative'
+            }
+        } else {
+            $bat = $bat -replace 'SET _JAVA_OPTIONS=.*', 'SET _JAVA_OPTIONS='
         }
         $bat = $bat -replace '-Xmx\d+[mMgG]?', $xmx
         Set-Content -LiteralPath $batPath -Value $bat -Encoding ASCII -NoNewline
@@ -389,9 +477,15 @@ try {
         Write-Host "Download de mods ignorado." -ForegroundColor Yellow
     }
 
+    $zbFailed = $false
     if (-not $SkipZombieBuddy) {
         Write-Step 'Instalando ZombieBuddy'
-        Install-ZombieBuddy -PZ $pz
+        try {
+            Install-ZombieBuddy -PZ $pz -Zomboid $zomboid
+        } catch {
+            $zbFailed = $true
+            Write-Warning "ZombieBuddy falhou: $($_.Exception.Message)"
+        }
     } else {
         Write-Host "ZombieBuddy ignorado." -ForegroundColor Yellow
     }
@@ -405,7 +499,12 @@ try {
     }
 
     Write-Host ""
-    Write-Host "TUDO PRONTO." -ForegroundColor Green
+    if ($zbFailed) {
+        Write-Host "MODS ATIVADOS, MAS O ZOMBIEBUDDY FALHOU." -ForegroundColor Yellow
+        Write-Host "Os mods Java (Viewpoint) podem nao carregar. Rode Install.bat de novo ou faça a instalacao manual indicada no README." -ForegroundColor Yellow
+    } else {
+        Write-Host "TUDO PRONTO." -ForegroundColor Green
+    }
     Write-Host "Abre o Project Zomboid e cria um mundo novo." -ForegroundColor White
     Write-Host "Controles: O = primeira pessoa, Shift+O = terceira, MMB = cursor, I = inventario, V = ADS, G = arremessar." -ForegroundColor White
     Write-Host "Se algo falhar, leia o README.txt ou o console.txt em $zomboid." -ForegroundColor White

@@ -21,8 +21,10 @@ The installer downloads a **single all-in-one mod archive** from this repository
 3. Wait while the installer downloads the ~1.1 GB archive from this repository's GitHub Release. It shows percentage, speed, and ETA. Download time depends on the connection; extraction takes another 1-3 minutes.
 4. The ZombieBuddy installer opens. Type:
    - `1` + Enter — Install ZombieBuddy
-   - `1` + Enter — Both launch modes
+   - `2` + Enter - Normal Launch
+   - `2` + Enter - ProjectZomboid64.json
    - `y` + Enter if asked to confirm
+   Steam can stay open with this option; the installer only patches the JSON launcher here.
 5. Launch Project Zomboid and create a **new world**.
 
 The installer finds Steam and Project Zomboid in any Steam library. It also
@@ -83,7 +85,8 @@ The installer activates everything at once. There is no pack-by-pack mode.
 - If Windows runs it from inside the ZIP, `Install.bat` copies itself to `%LOCALAPPDATA%\PZViewpoint\installer` automatically.
 - If Windows blocks the script: right-click `Install.bat` → Properties → Unblock.
 - If UAC is denied, right-click `Install.bat` → Run as administrator.
-- ZombieBuddy missing: run `Install.bat` again and choose `1` then `1`.
+- ZombieBuddy installer cannot detect the mod: run `Install.bat` again; it now creates the expected Workshop folder automatically and falls back to copying `ZombieBuddy.jar`/`zbNative.dll` manually.
+- ZombieBuddy missing: run `Install.bat` again and choose `1`, then `2`, then `2`.
 
 ## Credits
 

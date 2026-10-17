@@ -21,8 +21,10 @@ COMO INSTALAR
    Quando aparecer "Extraindo", o download ja terminou; espere 1-3 min.
 4. O instalador do ZombieBuddy vai abrir. No terminal dele:
    - escreve 1 e Enter  (Install ZombieBuddy)
-   - escreve 1 e Enter  (Both)
+   - escreve 2 e Enter  (Normal Launch)
+   - escreve 2 e Enter  (ProjectZomboid64.json)
    - se pedir confirmacao, escreve y e Enter
+   Com essa opcao a Steam pode ficar aberta.
 5. Quando terminar, abre o Project Zomboid e cria um mundo NOVO.
 
 O instalador encontra o Steam e o jogo em qualquer biblioteca/disco.
@@ -59,8 +61,11 @@ SE DER ERRO
   Install.bat > Propriedades > Desbloquear.
 - Se negar o pedido de administrador, clica com o botao direito no
   Install.bat > Executar como administrador.
+- Se o ZombieBuddy nao detectar o mod, roda Install.bat de novo. O script
+  cria a pasta da Workshop esperada e, se necessario, copia o JAR/DLL
+  manualmente.
 - Se o ZombieBuddy nao instalar, roda Install.bat de novo e escolhe
-  1 (Install) e 1 (Both).
+  1 (Install), 2 (Normal Launch) e 2 (ProjectZomboid64.json).
 - Se os telhados sumirem, aumenta memory.packMiB em
   C:\Users\<voce>\Zomboid\viewpoint-live.properties.
 

@@ -64,12 +64,14 @@ for documentation; there is no separate activation step.
 
 The installer activates everything at once. There is no pack-by-pack mode.
 
-- `Activate-All.bat` reapplies the full mod list.
-- `Deactivate-All.bat` removes the installed mods and empties `default.txt`.
+- `Activate-All.bat` reapplies the full mod list; it only rewrites `default.txt`.
+- `Deactivate-All.bat` moves the mods to `%USERPROFILE%\Zomboid\backups\mods-removed` and empties `default.txt`. Use `Deactivate-All.ps1 -Purge` to delete them.
+- `Setup-Host.bat` writes the full mod list into `servertest.ini` for co-op hosting and creates a backup.
+- After a Steam/PZ update, run `Repair.bat` (or `Install.bat` again) to restore the ZombieBuddy agent and launchers.
 
 ## Notes
 
-- `default.txt` applies to **new single-player worlds**. For co-op, add the same mods in the Host settings.
+- `default.txt` applies to **new single-player worlds**. For co-op, run `Setup-Host.bat`; every player must use the same pack.
 - **Roofs** and **Visible Loot** are WIP.
 - **Camera Motion** and **Roofs** are not multiplayer-tested; remove them in the Mods menu before hosting.
 - Do not combine with Knox Inventory, Tactical Grid Inventory, Equipment UI, CleanUI, Modern Status, or Clean HotBar.
@@ -87,10 +89,12 @@ The installer activates everything at once. There is no pack-by-pack mode.
   `https://github.com/GustavoHeringerCurcio/pz-viewpoint-starter/releases/download/mods-v1/PZ-Viewpoint-Mods.tar`
   Save it as `%LOCALAPPDATA%\PZViewpoint\archive\PZ-Viewpoint-Mods.tar`, then run `Install.bat` again.
 - If Windows runs it from inside the ZIP, `Install.bat` copies itself to `%LOCALAPPDATA%\PZViewpoint\installer` automatically.
-- If Windows blocks the script: right-click `Install.bat` → Properties → Unblock.
-- If UAC is denied, right-click `Install.bat` → Run as administrator.
+- If Windows blocks the script: right-click `Install.bat` -> Properties -> Unblock.
+- If UAC is denied, right-click `Install.bat` -> Run as administrator.
 - ZombieBuddy installer cannot detect the mod: run `Install.bat` again; it now creates the expected Workshop folder automatically and falls back to copying `ZombieBuddy.jar`/`zbNative.dll` manually.
 - ZombieBuddy missing: run `Install.bat` again and choose `1`, then `2`, then `2`.
+- If you previously chose `Both`, remove `-agentlib:zbNative --` from Steam Launch Options; otherwise the agent may load twice.
+- `Setup-Host.bat` requires `Zomboid\Server\servertest.ini` to exist. If a mod is client-only and the host fails, restore the backup created in `Zomboid\backups`.
 
 ## Credits
 

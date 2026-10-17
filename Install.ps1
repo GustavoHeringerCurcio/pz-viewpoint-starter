@@ -93,6 +93,31 @@ function Test-ArchiveCacheComplete {
     return $true
 }
 
+function Test-FreeSpace {
+    param([int]$RequiredGB)
+    $free = $null
+    try {
+        $root = [IO.Path]::GetPathRoot((Get-UserProfile))
+        $drive = $root.TrimEnd('\').TrimEnd(':')
+        $free = (Get-PSDrive -Name $drive -ErrorAction Stop).Free
+    } catch { }
+    if ($null -ne $free -and $free -lt ($RequiredGB * 1GB)) {
+        throw "Espaco insuficiente: $([math]::Round($free / 1GB, 1)) GB livres; necessario ~$RequiredGB GB."
+    }
+}
+
+function Test-SteamLaunchOptionsAgent {
+    try {
+        $steam = Get-SteamPath
+        $userdata = Join-Path $steam 'userdata'
+        if (-not (Test-Path -LiteralPath $userdata)) { return $false }
+        foreach ($file in (Get-ChildItem -LiteralPath $userdata -Recurse -Filter 'localconfig.vdf' -ErrorAction SilentlyContinue)) {
+            if (Select-String -LiteralPath $file.FullName -Pattern 'agentlib:zbNative' -Quiet -ErrorAction SilentlyContinue) { return $true }
+        }
+    } catch { }
+    return $false
+}
+
 function Test-ModsInstalled {
     param([string]$ManifestPath, [switch]$WriteMarker)
 
@@ -186,6 +211,9 @@ function Install-FromArchive {
     if ($cacheComplete -and -not $ForceRedownload) {
         Write-Host "[1/5] Cache completo; download e extracao ignorados." -ForegroundColor Green
     } else {
+        $requiredGB = 3
+        if ((Test-Path -LiteralPath $tarPath) -and -not $ForceRedownload) { $requiredGB = 2 }
+        Test-FreeSpace -RequiredGB $requiredGB
         Write-Host "[1/5] Obtendo hash SHA256..." -ForegroundColor Yellow
         $expected = $ArchiveSha256
         if (Test-Path -LiteralPath $shaPath) {
@@ -563,6 +591,9 @@ try {
 
     Write-Step 'Ajustando o jogo'
     Set-GameConfig -PZ $pz -Zomboid $zomboid
+    if (Test-SteamLaunchOptionsAgent) {
+        Write-Warning 'As Steam Launch Options ainda contem -agentlib:zbNative. Remova para nao carregar o agente duas vezes; use Normal Launch -> JSON.'
+    }
 
     if (-not $NoActivate) {
         Write-Step 'Ativando todos os mods'

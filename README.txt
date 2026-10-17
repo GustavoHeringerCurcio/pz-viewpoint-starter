@@ -46,8 +46,10 @@ CONTROLES
 
 INSTALAR TUDO DE UMA VEZ
 O instalador ativa todos os mods juntos. Nao existe mais modo por levas.
-  Activate-All.bat .... reaplica a lista completa
-  Deactivate-All.bat .. remove os mods e limpa o default.txt
+  Activate-All.bat .... reaplica a lista completa (so escreve default.txt)
+  Deactivate-All.bat .. move os mods para backups e limpa o default.txt
+  Setup-Host.bat ...... configura o servertest.ini com todos os mods
+  Repair.bat .......... repara ZombieBuddy/config apos update da Steam/PZ
 
 SE DER ERRO
 - Le C:\Users\<voce>\Zomboid\console.txt
@@ -70,6 +72,10 @@ SE DER ERRO
   manualmente.
 - Se o ZombieBuddy nao instalar, roda Install.bat de novo e escolhe
   1 (Install), 2 (Normal Launch) e 2 (ProjectZomboid64.json).
+- Se antes escolheste "Both", remove -agentlib:zbNative -- das Steam
+  Launch Options para o agente nao carregar duas vezes.
+- Depois de atualizar o jogo pela Steam, roda Repair.bat.
+- Para apagar os mods de vez: Deactivate-All.ps1 -Purge
 - Se os telhados sumirem, aumenta memory.packMiB em
   C:\Users\<voce>\Zomboid\viewpoint-live.properties.
 
@@ -77,8 +83,10 @@ MULTIPLAYER
 - Cada amigo precisa rodar o Install.bat no proprio PC.
 - Todos precisam da mesma versao do jogo e dos mesmos mods.
 - O Host deve usar a mesma lista completa de mods.
-- Os mods do default.txt valem para mundos novos single-player. Para
-  hospedar co-op, adiciona os mesmos mods nas configuracoes do Host.
+- Os mods do default.txt valem para mundos novos single-player.
+- Para hospedar co-op, roda Setup-Host.bat. Ele faz backup do
+  servertest.ini e grava a lista completa de mods.
+- Todos os jogadores precisam do mesmo pack.
 - Viewpoint Roofs e WIP e nao foi testado em multiplayer; remove ele
   pelo menu Mods antes de hospedar.
 

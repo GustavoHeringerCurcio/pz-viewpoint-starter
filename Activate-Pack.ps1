@@ -19,6 +19,11 @@ $backupDir = Join-Path (Get-ZomboidDir) 'backups'
 New-Item -ItemType Directory -Path $modsDir -Force | Out-Null
 New-Item -ItemType Directory -Path $backupDir -Force | Out-Null
 
+$reset = Join-Path $modsDir 'reset-mods-42_00.txt'
+if (-not (Test-Path -LiteralPath $reset)) {
+    Set-Content -LiteralPath $reset -Value 'If this file does not exist, default.txt will be reset to empty (no mods active).' -Encoding ASCII
+}
+
 $managed = @()
 foreach ($p in $order) {
     foreach ($m in $data.$p) { $managed += $m.Folder }

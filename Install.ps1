@@ -144,7 +144,7 @@ function Install-ZombieBuddy {
     Write-Host "  2) escreve 1 e Enter  (Both)" -ForegroundColor White
     Write-Host "  3) se pedir confirmacao, escreve y e Enter" -ForegroundColor White
     Write-Host ""
-    Start-Process -FilePath $installer -Wait
+    Start-Process -FilePath $installer -WorkingDirectory (Split-Path $installer -Parent) -Wait
 
     if (-not (Test-ZombieBuddyInstalled -PZ $PZ)) {
         throw 'ZombieBuddy nao foi instalado. Rode Install.bat de novo e escolha 1 e depois 1.'

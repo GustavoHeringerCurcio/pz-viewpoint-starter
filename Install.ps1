@@ -28,7 +28,7 @@ function Backup-GameFiles([string]$PZ, [string]$Zomboid) {
 }
 
 function Get-SteamCmd {
-    $tools = Join-Path $env:LOCALAPPDATA 'PZViewpoint\steamcmd'
+    $tools = Join-Path (Get-LocalAppData) 'PZViewpoint\steamcmd'
     $exe = Join-Path $tools 'steamcmd.exe'
     if (Test-Path -LiteralPath $exe) { return $exe }
 
@@ -39,6 +39,15 @@ function Get-SteamCmd {
     Expand-Archive -LiteralPath $zip -DestinationPath $tools -Force
     if (-not (Test-Path -LiteralPath $exe)) { throw 'Nao foi possivel instalar o SteamCMD.' }
     return $exe
+}
+
+function Test-CachedWorkshopItem {
+    param([string]$Path)
+    if (-not (Test-Path -LiteralPath $Path)) { return $false }
+    $mods = Join-Path $Path 'mods'
+    if (-not (Test-Path -LiteralPath $mods)) { return $false }
+    $info = Get-ChildItem -LiteralPath $mods -Recurse -Filter 'mod.info' -ErrorAction SilentlyContinue | Select-Object -First 1
+    return [bool]$info
 }
 
 function Install-WorkshopItems {
@@ -63,7 +72,7 @@ function Install-WorkshopItems {
 
     foreach ($id in $ids) {
         $cache = Join-Path $cacheRoot $id
-        if (-not $Force -and (Test-Path -LiteralPath $cache)) { continue }
+        if (-not $Force -and (Test-CachedWorkshopItem -Path $cache)) { continue }
 
         $source = $null
         foreach ($candidate in @((Join-Path $srcRoot $id), (Join-Path $gameRoot $id))) {
@@ -73,7 +82,7 @@ function Install-WorkshopItems {
 
         if (Test-Path -LiteralPath $cache) { Remove-Item -LiteralPath $cache -Recurse -Force }
         robocopy $source $cache /E /MT:8 /R:1 /W:1 /NFL /NDL /NJH /NJS /NP | Out-Null
-        if ($LASTEXITCODE -ge 8) { $missing += $id }
+        if ($LASTEXITCODE -ge 8 -or -not (Test-CachedWorkshopItem -Path $cache)) { $missing += $id }
     }
 
     if ($missing.Count -gt 0) {
@@ -90,7 +99,7 @@ function Install-WorkshopItems {
             if (-not (Test-Path -LiteralPath $src)) { $failed += $id; continue }
             if (Test-Path -LiteralPath $cache) { Remove-Item -LiteralPath $cache -Recurse -Force }
             robocopy $src $cache /E /MT:8 /R:1 /W:1 /NFL /NDL /NJH /NJS /NP | Out-Null
-            if ($LASTEXITCODE -ge 8) { $failed += $id }
+            if ($LASTEXITCODE -ge 8 -or -not (Test-CachedWorkshopItem -Path $cache)) { $failed += $id }
         }
 
         if ($failed.Count -gt 0) {
@@ -129,7 +138,7 @@ function Install-ZombieBuddy {
     $asset = $release.assets | Where-Object { $_.name -like 'ZombieBuddyInstaller_*.exe' } | Select-Object -First 1
     if (-not $asset) { throw 'Instalador do ZombieBuddy nao encontrado no GitHub.' }
 
-    $installer = Join-Path $env:TEMP $asset.name
+    $installer = Join-Path ([IO.Path]::GetTempPath()) $asset.name
     Invoke-WebRequest -Uri $asset.browser_download_url -OutFile $installer -UseBasicParsing
     if ($asset.digest) {
         $expected = $asset.digest -replace '^sha256:', ''
@@ -155,15 +164,20 @@ function Install-ZombieBuddy {
 function Set-GameConfig {
     param([string]$PZ, [string]$Zomboid)
 
+    $heap = Get-RecommendedHeapMB
+    $xmx = "-Xmx${heap}m"
+    Write-Host "Memoria do jogo: ${heap} MB" -ForegroundColor DarkGray
+
     $jsonPath = Join-Path $PZ 'ProjectZomboid64.json'
     if (Test-Path -LiteralPath $jsonPath) {
         $json = Get-Content -LiteralPath $jsonPath -Raw | ConvertFrom-Json
         $vm = @($json.vmArgs)
-        if (-not ($vm -match '^-Xmx')) { $vm += '-Xmx8192m' }
-        else { $vm = $vm | ForEach-Object { if ($_ -match '^-Xmx') { '-Xmx8192m' } else { $_ } } }
+        if (-not ($vm -match '^-Xmx')) { $vm += $xmx }
+        else { $vm = $vm | ForEach-Object { if ($_ -match '^-Xmx') { $xmx } else { $_ } } }
         if (-not ($vm -match 'agentlib:zbNative')) { $vm = @('-agentlib:zbNative') + $vm }
         $json.vmArgs = $vm
-        $json | ConvertTo-Json -Depth 10 | Set-Content -LiteralPath $jsonPath -Encoding UTF8
+        $jsonText = $json | ConvertTo-Json -Depth 10
+        [IO.File]::WriteAllText($jsonPath, $jsonText, (New-Object System.Text.UTF8Encoding($false)))
     }
 
     $batPath = Join-Path $PZ 'ProjectZomboid64.bat'
@@ -172,7 +186,7 @@ function Set-GameConfig {
         if ($bat -notmatch 'agentlib:zbNative') {
             $bat = $bat -replace 'SET _JAVA_OPTIONS=.*', 'SET _JAVA_OPTIONS=-agentlib:zbNative'
         }
-        $bat = $bat -replace '-Xmx\d+m', '-Xmx8192m'
+        $bat = $bat -replace '-Xmx\d+[mMgG]?', $xmx
         Set-Content -LiteralPath $batPath -Value $bat -Encoding ASCII -NoNewline
     }
 
@@ -194,6 +208,20 @@ try {
     Write-Host "Jogo: $pz"
     Write-Host "Dados: $zomboid"
     Write-Host "Workshop: $workshop"
+    $ram = Get-TotalRamMB
+    $heap = Get-RecommendedHeapMB
+    Write-Host "RAM detectada: $ram MB; heap do jogo: ${heap} MB"
+    if ($ram -gt 0 -and $ram -lt 8192) {
+        Write-Warning 'Pouca RAM detectada. 16 GB e o recomendado para este pack.'
+    }
+
+    $versionFile = Join-Path $zomboid 'version.txt'
+    if (Test-Path -LiteralPath $versionFile) {
+        $version = (Get-Content -LiteralPath $versionFile -TotalCount 1).Trim()
+        if ($version -and $version -notmatch '^42\.21') {
+            Write-Warning "Versao do jogo detectada: $version. Este pack foi feito para 42.21."
+        }
+    }
 
     $data = Get-PZWorkshopManifest -ScriptRoot $PSScriptRoot
     $allIds = @()
@@ -214,6 +242,7 @@ try {
 
     if (-not (Test-IsAdmin)) { throw 'Abre o Install.bat e aceita o pedido de administrador.' }
     Assert-GameClosed
+    $workshop = Ensure-WorkshopRoot
 
     Backup-GameFiles -PZ $pz -Zomboid $zomboid
 

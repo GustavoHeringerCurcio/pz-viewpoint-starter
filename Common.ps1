@@ -16,6 +16,36 @@ function Assert-GameClosed {
     }
 }
 
+function Get-UserProfile {
+    if ($env:USERPROFILE) { return $env:USERPROFILE }
+    return [Environment]::GetFolderPath('UserProfile')
+}
+
+function Get-LocalAppData {
+    if ($env:LOCALAPPDATA) { return $env:LOCALAPPDATA }
+    return [Environment]::GetFolderPath('LocalApplicationData')
+}
+
+function Get-TotalRamMB {
+    try {
+        $system = Get-CimInstance -ClassName Win32_ComputerSystem -ErrorAction Stop
+        if ($system.TotalPhysicalMemory) { return [int]($system.TotalPhysicalMemory / 1MB) }
+    } catch { }
+    try {
+        $system = Get-WmiObject -Class Win32_ComputerSystem -ErrorAction Stop
+        if ($system.TotalPhysicalMemory) { return [int]($system.TotalPhysicalMemory / 1MB) }
+    } catch { }
+    return 0
+}
+
+function Get-RecommendedHeapMB {
+    $ram = Get-TotalRamMB
+    if ($ram -le 0) { return 8192 }
+    $half = [int]($ram / 2)
+    $heap = [Math]::Min(8192, [Math]::Max(4096, $half))
+    return [int]([Math]::Floor($heap / 512) * 512)
+}
+
 function Get-SteamLibraries {
     $libraries = New-Object System.Collections.Generic.List[string]
 
@@ -71,7 +101,9 @@ function Get-PZPath {
 }
 
 function Get-ZomboidDir {
-    $dir = Join-Path $env:USERPROFILE 'Zomboid'
+    $profile = Get-UserProfile
+    if (-not $profile) { throw 'Pasta do usuario nao encontrada.' }
+    $dir = Join-Path $profile 'Zomboid'
     New-Item -ItemType Directory -Path $dir -Force | Out-Null
     return $dir
 }
@@ -79,7 +111,11 @@ function Get-ZomboidDir {
 function Get-WorkshopRoot {
     $pz = Get-PZPath
     $lib = Split-Path (Split-Path (Split-Path $pz -Parent) -Parent) -Parent
-    $root = Join-Path $lib 'steamapps\workshop\content\108600'
+    return Join-Path $lib 'steamapps\workshop\content\108600'
+}
+
+function Ensure-WorkshopRoot {
+    $root = Get-WorkshopRoot
     New-Item -ItemType Directory -Path $root -Force | Out-Null
     return $root
 }
@@ -95,10 +131,13 @@ function Get-ModSourcePath {
         [string]$Workshop,
         [string]$Folder
     )
-    foreach ($root in @((Get-WorkshopCacheRoot), (Get-WorkshopRoot))) {
-        $path = Join-Path (Join-Path (Join-Path $root $Workshop) 'mods') $Folder
-        if (Test-Path -LiteralPath $path) { return $path }
-    }
+    $cache = Get-WorkshopCacheRoot
+    $path = Join-Path (Join-Path (Join-Path $cache $Workshop) 'mods') $Folder
+    if (Test-Path -LiteralPath $path) { return $path }
+
+    $workshopRoot = Get-WorkshopRoot
+    $path = Join-Path (Join-Path (Join-Path $workshopRoot $Workshop) 'mods') $Folder
+    if (Test-Path -LiteralPath $path) { return $path }
     return $null
 }
 

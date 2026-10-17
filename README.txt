@@ -9,18 +9,22 @@ REQUISITOS
 - Steam + Project Zomboid (Build 42.21)
 - Project Zomboid fechado
 - Cerca de 2 GB livres
-- 16 GB de RAM e placa de video com 8 GB de VRAM (recomendado)
+- 8 GB de RAM no minimo, 16 GB recomendado
+- Placa de video com 8 GB de VRAM (recomendado)
+- Qualquer usuario, pasta, disco ou biblioteca Steam em disco local
 
 COMO INSTALAR
-1. Extrai esta pasta para onde quiser (ex.: Desktop).
-2. Clica com o botao direito em Install.bat e escolhe
-   "Executar como administrador".
+1. Extrai esta pasta para um disco local (nao uses pasta de rede).
+2. Da dois cliques em Install.bat. Ele pede permissao de administrador.
 3. Espera baixar os mods do Workshop. Pode demorar.
 4. O instalador do ZombieBuddy vai abrir. No terminal dele:
    - escreve 1 e Enter  (Install ZombieBuddy)
    - escreve 1 e Enter  (Both)
    - se pedir confirmacao, escreve y e Enter
 5. Quando terminar, abre o Project Zomboid e cria um mundo NOVO.
+
+O instalador encontra o Steam e o jogo em qualquer biblioteca/disco.
+A memoria do jogo (heap) e ajustada automaticamente pela RAM do PC.
 
 CONTROLES
 - O ........ primeira pessoa
@@ -44,9 +48,13 @@ Tambem podes usar Activate-All.bat e Deactivate-All.bat.
 
 SE DER ERRO
 - Le C:\Users\<voce>\Zomboid\console.txt
+- Testa os caminhos sem mudar nada:
+  powershell -ExecutionPolicy Bypass -File .\Install.ps1 -CheckOnly
 - Fecha o jogo e roda Install.bat de novo.
 - Se o Windows bloquear o script, clica com o botao direito no
   Install.bat > Propriedades > Desbloquear.
+- Se negar o pedido de administrador, clica com o botao direito no
+  Install.bat > Executar como administrador.
 - Se o ZombieBuddy nao instalar, roda Install.bat de novo e escolhe
   1 (Install) e 1 (Both).
 - Se os telhados sumirem, aumenta memory.packMiB em

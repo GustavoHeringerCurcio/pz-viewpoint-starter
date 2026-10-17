@@ -10,18 +10,23 @@ The repository contains **scripts only**. No mod files are redistributed: the in
 - Steam + Project Zomboid (Build 42.21)
 - Project Zomboid closed during installation
 - ~2 GB free disk space
-- 16 GB RAM and a GPU with 8 GB VRAM recommended (RX 6600 tested)
+- 8 GB RAM minimum, 16 GB recommended
+- GPU with 8 GB VRAM recommended (RX 6600 tested)
+- Any Windows username, folder, drive, or Steam library on a local disk
 
 ## Install
 
-1. Download or clone this repository.
-2. Right-click **`Install.bat`** → **Run as administrator**.
+1. Download or clone this repository to a local folder (not a network share).
+2. Double-click **`Install.bat`**. It requests administrator permission automatically.
 3. Wait while SteamCMD downloads the Workshop items.
 4. The ZombieBuddy installer opens. Type:
    - `1` + Enter — Install ZombieBuddy
    - `1` + Enter — Both launch modes
    - `y` + Enter if asked to confirm
 5. Launch Project Zomboid and create a **new world**.
+
+The installer finds Steam and Project Zomboid in any Steam library. It also
+sets the Java heap automatically based on the PC's RAM.
 
 ## Controls
 
@@ -68,8 +73,13 @@ Use `Deactivate-All.bat` to disable the pack.
 ## Troubleshooting
 
 - Read `%USERPROFILE%\Zomboid\console.txt`.
+- Check paths without changing anything:
+  ```powershell
+  powershell -ExecutionPolicy Bypass -File .\Install.ps1 -CheckOnly
+  ```
 - Re-run `Install.bat` if a Workshop item failed.
 - If Windows blocks the script: right-click `Install.bat` → Properties → Unblock.
+- If UAC is denied, right-click `Install.bat` → Run as administrator.
 - ZombieBuddy missing: run `Install.bat` again and choose `1` then `1`.
 
 ## Credits

@@ -41,9 +41,12 @@ sets the Java heap automatically based on the PC's RAM.
 | `V` | Aim down sights |
 | `G` | Throw |
 
-## Packs
+## What gets installed
 
-| Pack | Contents |
+All 38 mods are installed and enabled in one pass. The groups below are only
+for documentation; there is no separate activation step.
+
+| Group | Contents |
 |---|---|
 | `Pack1_Core` | ZombieBuddy, Viewpoint, Voxel Studio, Viewpoint Interface |
 | `Pack2_Tactical` | Advanced Movement, Equipment Overlays, Throwables, True Ballistics, ADS |

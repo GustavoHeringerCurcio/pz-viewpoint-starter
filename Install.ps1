@@ -77,9 +77,10 @@ $InstallerVersion = 2
 
 function Test-InstallerVersion {
     try {
-        $url = 'https://raw.githubusercontent.com/GustavoHeringerCurcio/pz-viewpoint-starter/main/installer-version.txt'
-        $value = (Invoke-WebRequest -Uri $url -UseBasicParsing -TimeoutSec 8).Content
-        if ($value -is [byte[]]) { $value = [Text.Encoding]::UTF8.GetString($value) }
+        $url = 'https://api.github.com/repos/GustavoHeringerCurcio/pz-viewpoint-starter/contents/installer-version.txt'
+        $headers = @{ 'User-Agent' = 'pz-viewpoint-starter' }
+        $response = Invoke-RestMethod -Uri $url -Headers $headers -TimeoutSec 8
+        $value = [Text.Encoding]::UTF8.GetString([Convert]::FromBase64String($response.content))
         $remote = 0
         if ([int]::TryParse($value.Trim(), [ref]$remote) -and $remote -gt $InstallerVersion) {
             Write-Warning "Ha uma versao mais nova do instalador ($remote). Baixe o ZIP atualizado do GitHub (Code > Download ZIP) e rode Install.bat de dentro dele."

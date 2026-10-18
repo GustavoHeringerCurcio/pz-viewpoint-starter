@@ -64,7 +64,7 @@ powershell -ExecutionPolicy Bypass -File .\Install.ps1 -Profile Advanced
 | `Pack4_Survival` | Vanilla Foods, Bath/Shower, Repair Clothes, Virus Vaccine, Plumbing, damnlib, Containers!, Weapon Sling |
 | `Pack5_QoL` | Draw On The Map, Skill Recovery Journal, errorMagnifier, Mod Update Alert, Spawn Selector |
 | `Pack6_Extras` | Faster Reading, Immersive Driving, Visceral, Simple Crossbows |
-| `Pack7_Immersion` | Immersive Effects, Camera Motion, Visible Loot, Roofs (WIP) |
+| `Pack7_Immersion` | Immersive Effects, Bodycam, Visible Loot, Roofs (WIP) |
 
 ### Advanced - additions
 
@@ -136,7 +136,7 @@ For co-op, every player must install the same profile and the same archive versi
 
 - `default.txt` applies to single-player worlds. For co-op, run `Setup-Host.bat`; every player must use the same pack.
 - **Roofs** and **Visible Loot** are WIP.
-- **Camera Motion** and **Roofs** are not fully multiplayer-tested.
+- **Bodycam** and **Roofs** are not fully multiplayer-tested.
 - Do not combine with Knox Inventory, Tactical Grid Inventory, Equipment UI, CleanUI, Modern Status, or Clean HotBar.
 - If roofs disappear after fast travel, raise `memory.packMiB` in `%USERPROFILE%\Zomboid\viewpoint-live.properties`.
 - Advanced is heavier than Medium because of 3D windows/doors/fences and the RV interior. Test FPS near an RV and during a storm. If frame rate drops below 60, disable 3D Windows first, then 3D Fences, then the RV.

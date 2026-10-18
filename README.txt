@@ -60,7 +60,7 @@ KK's Shelves, Working TVs, Shoot to Thrill, Blood VFX ou Physics & Collision.
 
 SAVE ATUAL
 O Avancado foi feito para ser adicionado ao save existente:
-- Correcoes, UI, 3D, mapa, foraging, fishing e helicoptero sao client-side
+- Correcoes, UI, 3D base (PZVoxel/VisibleLoot/Roofs), mapa, foraging, fishing e helicoptero sao client-side
   ou visuais e nao gravam dados do mundo.
 - True Weathers Gameplay so calcula clima e sentidos em runtime; nao gera mapa.
 - True Swimming e explicitamente seguro para adicionar em save existente.

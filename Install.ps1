@@ -73,7 +73,7 @@ function Write-Step([string]$Text) {
     Write-Host "== $Text ==" -ForegroundColor Cyan
 }
 
-$InstallerVersion = 2
+$InstallerVersion = 3
 
 function Test-InstallerVersion {
     try {
@@ -194,7 +194,7 @@ function Test-ModsInstalled {
 
     $modsDir = Join-Path (Get-ZomboidDir) 'mods'
     $marker = Join-Path $modsDir '.pz-viewpoint-installed'
-    if (Test-Path -LiteralPath $marker) {
+    if (-not $WriteMarker -and (Test-Path -LiteralPath $marker)) {
         $value = ((Get-Content -LiteralPath $marker -Raw).Trim() -split '\s+')[0]
         if ($value -ne $ArchiveSha256) { return $false }
     }

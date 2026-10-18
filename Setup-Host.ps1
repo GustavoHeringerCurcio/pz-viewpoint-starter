@@ -1,7 +1,8 @@
 param(
     [ValidateSet('Medium', 'Advanced')]
     [string]$Profile,
-    [switch]$Apply
+    [switch]$Apply,
+    [switch]$Quiet
 )
 
 $ErrorActionPreference = 'Stop'
@@ -21,7 +22,7 @@ foreach ($packName in $order) {
 $modsLine = 'Mods=' + ($ids -join ';')
 Write-Host "Perfil: $Profile" -ForegroundColor Cyan
 Write-Host "Mods para o host: $($ids.Count)" -ForegroundColor Cyan
-Write-Host $modsLine
+if (-not $Quiet) { Write-Host $modsLine }
 
 if (-not $Apply) {
     Write-Host ""

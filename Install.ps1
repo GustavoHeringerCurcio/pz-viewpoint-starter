@@ -4,8 +4,8 @@ param(
     [switch]$CheckOnly,
     [switch]$SkipMods,
     [switch]$SkipZombieBuddy,
-    [switch]$SkipSaveBackup,
     [switch]$NoActivate,
+    [switch]$SkipHost,
     [switch]$ForceRedownload,
     [switch]$UseSteamCmd
 )
@@ -50,7 +50,7 @@ function Select-Profile {
     Write-Host "  2) Avancado - 57 mods no cliente, fixes + 3D + natacao + RV" -ForegroundColor White
     Write-Host ""
     Write-Host "O Medio e o mais seguro para o save atual. O Avancado adiciona mods" -ForegroundColor DarkGray
-    Write-Host "sem remover os atuais e faz backup do save antes de instalar." -ForegroundColor DarkGray
+    Write-Host "sem remover os atuais." -ForegroundColor DarkGray
     Write-Host ""
 
     while ($true) {
@@ -73,7 +73,23 @@ function Write-Step([string]$Text) {
     Write-Host "== $Text ==" -ForegroundColor Cyan
 }
 
-function Backup-GameFiles([string]$PZ, [string]$Zomboid, [string]$Profile) {
+$InstallerVersion = 2
+
+function Test-InstallerVersion {
+    try {
+        $url = 'https://raw.githubusercontent.com/GustavoHeringerCurcio/pz-viewpoint-starter/main/installer-version.txt'
+        $value = (Invoke-WebRequest -Uri $url -UseBasicParsing -TimeoutSec 8).Content
+        if ($value -is [byte[]]) { $value = [Text.Encoding]::UTF8.GetString($value) }
+        $remote = 0
+        if ([int]::TryParse($value.Trim(), [ref]$remote) -and $remote -gt $InstallerVersion) {
+            Write-Warning "Ha uma versao mais nova do instalador ($remote). Baixe o ZIP atualizado do GitHub (Code > Download ZIP) e rode Install.bat de dentro dele."
+        }
+    } catch {
+        Write-Verbose "Nao foi possivel verificar a versao do instalador."
+    }
+}
+
+function Backup-GameFiles([string]$PZ, [string]$Zomboid) {
     $stamp = Get-Date -Format 'yyyyMMdd-HHmmss'
     $dst = Join-Path $Zomboid "backups\setup-$stamp"
     New-Item -ItemType Directory -Path $dst -Force | Out-Null
@@ -84,22 +100,6 @@ function Backup-GameFiles([string]$PZ, [string]$Zomboid, [string]$Profile) {
     $default = Join-Path $Zomboid 'mods\default.txt'
     if (Test-Path -LiteralPath $default) { Copy-Item -LiteralPath $default -Destination (Join-Path $dst 'default.txt') -Force }
     Write-Host "Backup de configuracao: $dst" -ForegroundColor DarkGray
-
-    if ($Profile -eq 'Advanced' -and -not $SkipSaveBackup) {
-        $saveDst = Join-Path $Zomboid "backups\save-before-advanced-$stamp"
-        New-Item -ItemType Directory -Path $saveDst -Force | Out-Null
-        $multiplayer = Join-Path $Zomboid 'Saves\Multiplayer'
-        if (Test-Path -LiteralPath $multiplayer) {
-            foreach ($save in (Get-ChildItem -LiteralPath $multiplayer -Directory -Filter 'servertest*' -ErrorAction SilentlyContinue)) {
-                Copy-Item -LiteralPath $save.FullName -Destination $saveDst -Recurse -Force
-            }
-        }
-        foreach ($name in @('servertest.ini','servertest_SandboxVars.lua')) {
-            $src = Join-Path (Join-Path $Zomboid 'Server') $name
-            if (Test-Path -LiteralPath $src) { Copy-Item -LiteralPath $src -Destination (Join-Path $saveDst $name) -Force }
-        }
-        Write-Host "Backup do save: $saveDst" -ForegroundColor Green
-    }
 }
 
 function Get-SteamCmd {
@@ -245,6 +245,11 @@ function Move-ArchiveModsToGame {
                     continue
                 }
                 throw "Mod ausente no cache e em mods: $($m.Folder)"
+            }
+
+            if ((Test-ModInfoFolder -Path $dst) -and -not $Force) {
+                Write-Host "  [$index/$total] $($m.Folder) ja esta em mods; mantido" -ForegroundColor DarkGray
+                continue
             }
 
             if (Test-Path -LiteralPath $dst) {
@@ -599,6 +604,8 @@ try {
         }
     }
 
+    Test-InstallerVersion
+
     if (-not $Profile) {
         if ($CheckOnly) {
             $Profile = Get-SavedProfile
@@ -644,7 +651,7 @@ try {
     Set-SavedProfile -Profile $Profile
 
     Write-Host "Perfil selecionado: $Profile ($clientCount mods no cliente)." -ForegroundColor Cyan
-    Backup-GameFiles -PZ $pz -Zomboid $zomboid -Profile $Profile
+    Backup-GameFiles -PZ $pz -Zomboid $zomboid
 
     if (-not $SkipMods) {
         if ($UseSteamCmd) {
@@ -669,6 +676,7 @@ try {
     }
 
     $zbFailed = $false
+    $hostUpdated = $false
     if (-not $SkipZombieBuddy) {
         Write-Step 'Instalando ZombieBuddy'
         try {
@@ -690,6 +698,23 @@ try {
     if (-not $NoActivate) {
         Write-Step "Ativando mods do perfil $Profile"
         & (Join-Path $PSScriptRoot 'Activate-Pack.ps1') -Profile $Profile
+
+        if (-not $SkipHost) {
+            $hostIni = Join-Path $zomboid 'Server\servertest.ini'
+            if (Test-Path -LiteralPath $hostIni) {
+                Write-Step "Atualizando host para $Profile"
+                try {
+                    & (Join-Path $PSScriptRoot 'Setup-Host.ps1') -Apply -Profile $Profile -Quiet
+                    $hostUpdated = $true
+                } catch {
+                    Write-Warning "Nao foi possivel atualizar o servertest.ini: $($_.Exception.Message)"
+                }
+            } else {
+                Write-Host "Host nao encontrado; servertest.ini nao foi alterado." -ForegroundColor DarkGray
+            }
+        } else {
+            Write-Host "Atualizacao do host ignorada (-SkipHost)." -ForegroundColor DarkGray
+        }
     }
 
     Write-Host ""
@@ -700,10 +725,14 @@ try {
         Write-Host "TUDO PRONTO." -ForegroundColor Green
     }
     Write-Host "Perfil ativo: $Profile." -ForegroundColor White
+    if ($SkipHost) {
+        Write-Host "Host nao foi atualizado por causa de -SkipHost. Rode Setup-Host.bat." -ForegroundColor Yellow
+    } elseif ($hostUpdated) {
+        Write-Host "Host atualizado para este perfil com backup do servertest.ini." -ForegroundColor White
+    }
     if ($Profile -eq 'Advanced') {
-        Write-Host "Um backup do save foi criado em Zomboid\backups." -ForegroundColor White
         Write-Host "Para continuar o save atual, abra o host normalmente. Nao troque para Medio" -ForegroundColor Yellow
-        Write-Host "depois de usar o RV no mesmo save sem restaurar o backup." -ForegroundColor Yellow
+        Write-Host "depois de usar o RV no mesmo save sem restaurar o backup manual." -ForegroundColor Yellow
     } else {
         Write-Host "Abra o Project Zomboid. Para um mundo novo, crie o mundo; para o save atual, continue." -ForegroundColor White
     }

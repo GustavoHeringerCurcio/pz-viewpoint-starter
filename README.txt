@@ -76,21 +76,27 @@ com backup.
 O Avancado nao inclui mods que alteram terreno, tiles, telhados ou agua,
 entao nao exige mundo novo.
 
-BACKUP
-Antes de instalar o Avancado, o instalador cria:
-  %USERPROFILE%\Zomboid\backups\save-before-advanced-<data-hora>\
+ATUALIZANDO QUEM JA TEM O PACK
+Nao precisa desinstalar nem apagar a pasta mods.
+1. Fecha o Project Zomboid e o host.
+2. Baixa o ZIP atualizado do GitHub (Code > Download ZIP) e extrai.
+3. Roda o Install.bat de dentro da pasta extraida e escolhe 2 (Avancado).
+4. O instalador detecta o marcador antigo, baixa o mods-v2, mantem os mods
+   base, adiciona os novos e ativa o perfil Avancado.
+5. Se existir Zomboid\Server\servertest.ini, ele atualiza o host sozinho e
+   faz backup do INI.
+6. Todos os amigos precisam usar o mesmo instalador atualizado e escolher 2.
 
-Com:
-- Saves\Multiplayer\servertest
-- Saves\Multiplayer\servertest_player
-- Server\servertest.ini
-- Server\servertest_SandboxVars.lua
-- mods\default.txt
+O instalador verifica installer-version.txt no GitHub e avisa se existe uma
+versao mais nova. Use o Install.bat da pasta nova uma vez; um atalho antigo
+para %LOCALAPPDATA%\PZViewpoint\installer pode abrir o instalador velho.
 
-Configuracoes tambem sao salvas em Zomboid\backups\setup-<data-hora>.
-Para restaurar: fecha o jogo/host, renomeia o save atual, copia as pastas do
-backup de volta para Zomboid\Saves\Multiplayer, restaura os arquivos de Server
-e reinstala o mesmo perfil.
+O starter NAO faz backup do save. Faca sua copia manual antes de atualizar.
+Se um dia quiser voltar para Medio, restaure essa copia manual em vez de
+trocar o perfil no mesmo save que ja usou RV.
+
+Configuracoes sao salvas em Zomboid\backups\setup-<data-hora>; o INI do host
+e salvo pelo Setup-Host.
 
 CONTROLES
 - O ........ primeira pessoa
@@ -105,11 +111,12 @@ CONTROLES
 ATIVACAO E HOST
   Activate-All.bat .... reaplica o perfil salvo (so escreve default.txt)
   Deactivate-All.bat .. move os mods para backups e limpa o default.txt
-  Setup-Host.bat ...... configura o servertest.ini com o perfil salvo
+  Setup-Host.bat ...... repete a configuracao do servertest.ini manualmente
   Verify-Packs.ps1 .... mostra os mods instalados; aceita -Profile
   Repair.bat .......... repara ZombieBuddy/config apos update da Steam/PZ
 
-Medio grava 39 IDs no host. Avancado grava 58.
+O Install.bat atualiza o servertest.ini automaticamente quando ele existe.
+Use -SkipHost se quiser atualizar so o cliente. Medio grava 39 IDs; Avancado 58.
 Cada amigo precisa do mesmo perfil e da mesma versao do arquivo.
 Com DoLuaChecksum=true, mods diferentes podem impedir a entrada no servidor.
 O GridRVHost precisa estar no host; o Host pelo menu do jogo cuida do bootstrap.

@@ -91,23 +91,22 @@ Do not switch **Advanced -> Medium** on the same save after using an RV. Restore
 
 Advanced does not include mods that alter terrain, map tiles, roofs, or water, so it does not require a new world.
 
-## Backups
+## Updating an existing install
 
-Before installing Advanced, the installer creates:
+You do not need to uninstall the current pack or delete `Zomboid\mods`.
 
-`%USERPROFILE%\Zomboid\backups\save-before-advanced-<date-time>\`
+1. Close Project Zomboid and the host.
+2. Download the latest repository ZIP from GitHub (`Code` -> `Download ZIP`) and extract it to a local folder.
+3. Run `Install.bat` from the extracted folder and choose `2` for Advanced.
+4. The installer detects the old marker hash, downloads `mods-v2`, keeps the base mods, adds the Advanced mods, and activates the new profile.
+5. If `Zomboid\Server\servertest.ini` exists, the installer updates it automatically to the selected profile and backs up the INI.
+6. Every friend must use the same updated installer and choose the same profile.
 
-It contains:
+The installer checks `installer-version.txt` on GitHub and warns if a newer installer is available. Run the new `Install.bat` from the extracted ZIP once; an old shortcut to `%LOCALAPPDATA%\PZViewpoint\installer` may still run the old installer until it is refreshed.
 
-- `Saves\Multiplayer\servertest`
-- `Saves\Multiplayer\servertest_player`
-- `Server\servertest.ini`
-- `Server\servertest_SandboxVars.lua`
-- `mods\default.txt`
+The starter does **not** back up saves. Make your own copy of the save before updating. If you want to return to Medium later, restore that manual backup rather than switching profiles on a save that has used an RV.
 
-Configuration files are also backed up to `Zomboid\backups\setup-<date-time>`.
-
-To restore: close the game/host, rename the current save folder, copy the backup folders back into `Zomboid\Saves\Multiplayer`, restore the `Server` files, then reinstall the matching profile.
+Configuration files are backed up by the installer to `Zomboid\backups\setup-<date-time>`; the host INI is backed up by `Setup-Host`.
 
 ## Controls
 
@@ -126,7 +125,8 @@ To restore: close the game/host, rename the current save folder, copy the backup
 
 - `Activate-All.bat` reapplies the saved profile's mod list; it only rewrites `default.txt`.
 - `Deactivate-All.bat` moves the mods to `Zomboid\backups\mods-removed` and empties `default.txt`. Use `Deactivate-All.ps1 -Purge` to delete them.
-- `Setup-Host.bat` writes the saved profile's mod list into `servertest.ini` and creates a backup. Medium writes 39 IDs; Advanced writes 58.
+- `Install.bat` updates `servertest.ini` automatically when the file exists; `Setup-Host.bat` can repeat it manually. Medium writes 39 IDs; Advanced writes 58, with an INI backup.
+- Use `-SkipHost` if you only want to update the client and not touch a host INI.
 - After a Steam/PZ update, run `Repair.bat` (or `Install.bat` again) to restore the ZombieBuddy agent and launchers.
 - `Verify-Packs.ps1` shows which mods are installed. Add `-Profile Medium` or `-Profile Advanced` to inspect a specific pack.
 

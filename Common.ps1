@@ -166,8 +166,7 @@ $script:BaseProfilePacks = @(
 
 $script:AdvancedProfilePacks = @(
     'Pack8_AdvancedFixes',
-    'Pack10_AdvancedRealism',
-    'Pack11_AdvancedVehicles'
+    'Pack10_AdvancedRealism'
 )
 
 function Get-PackOrder {

@@ -248,33 +248,9 @@
                            "ServerOnly":  false
                        }
                    ],
-    "Pack8_AdvancedFixes":  [
-                       {
-                           "Folder":  "ViewpointSurface",
-                           "Workshop":  "3814398576",
-                           "ModID":  "ViewpointSurface",
-                           "ServerOnly":  false
-                       },
-                       {
-                           "Folder":  "ViewpointDoor",
-                           "Workshop":  "3812151347",
-                           "ModID":  "ViewpointDoor",
-                           "ServerOnly":  false
-                       },
-                       {
-                           "Folder":  "ViewpointBarricade",
-                           "Workshop":  "3815033191",
-                           "ModID":  "ViewpointBarricade",
-                           "ServerOnly":  false
-                       },
-                       {
-                           "Folder":  "ViewpointLight",
-                           "Workshop":  "3811344119",
-                           "ModID":  "ViewpointLight",
-                           "ServerOnly":  false
-                       },
-                       {
-                           "Folder":  "ProjectViewpointQOL",
+     "Pack8_AdvancedFixes":  [
+                        {
+                            "Folder":  "ProjectViewpointQOL",
                            "Workshop":  "3811256204",
                            "ModID":  "ProjectViewpointQOL",
                            "ServerOnly":  false
@@ -312,35 +288,9 @@
                            "ServerOnly":  false
                        },
                        {
-                           "Folder":  "HeliEvent",
-                           "Workshop":  "3818359767",
-                           "ModID":  "HeliEvent",
-                           "ServerOnly":  false
-                       },
-                       {
                            "Folder":  "TrueSwimming",
                            "Workshop":  "3802372726",
                            "ModID":  "TrueSwimming",
-                           "ServerOnly":  false
-                       },
-                       {
-                           "Folder":  "Construction1PViewpoint",
-                           "Workshop":  "3812312558",
-                           "ModID":  "Construction1PViewpoint",
-                           "ServerOnly":  false
-                       }
-                   ],
-    "Pack11_AdvancedVehicles":  [
-                       {
-                           "Folder":  "GridRVHost",
-                           "Workshop":  "3820158673",
-                           "ModID":  "GridRVHost",
-                           "ServerOnly":  false
-                       },
-                       {
-                           "Folder":  "GridRV",
-                           "Workshop":  "3820158673",
-                           "ModID":  "GridRV",
                            "ServerOnly":  false
                        }
                    ]

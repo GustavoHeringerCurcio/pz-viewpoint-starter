@@ -47,7 +47,7 @@ function Select-Profile {
     Write-Host ""
     Write-Host "Escolha o modpack:" -ForegroundColor Cyan
     Write-Host "  1) Medio    - 38 mods no cliente, o pacote atual" -ForegroundColor White
-    Write-Host "  2) Avancado - 53 mods no cliente, fixes + natacao + RV" -ForegroundColor White
+    Write-Host "  2) Avancado - 45 mods no cliente, mecanicas + natacao" -ForegroundColor White
     Write-Host ""
     Write-Host "O Medio e o mais seguro para o save atual. O Avancado adiciona mods" -ForegroundColor DarkGray
     Write-Host "sem remover os atuais." -ForegroundColor DarkGray
@@ -73,7 +73,7 @@ function Write-Step([string]$Text) {
     Write-Host "== $Text ==" -ForegroundColor Cyan
 }
 
-$InstallerVersion = 4
+$InstallerVersion = 5
 
 function Test-InstallerVersion {
     try {
@@ -104,9 +104,9 @@ function Backup-GameFiles([string]$PZ, [string]$Zomboid) {
 }
 
 function Remove-ObsoleteMods([string]$Zomboid) {
-    $obsolete = @('BasileDoors3D', 'DGVCurtains', 'DGVWindows3D', 'ViewpointFences3D')
+    $obsolete = @('ViewpointDoor', 'ViewpointSurface', 'ViewpointBarricade', 'ViewpointLight', 'Construction1PViewpoint', 'HeliEvent', 'GridRV', 'GridRVHost', 'BasileDoors3D', 'DGVCurtains', 'DGVWindows3D', 'ViewpointFences3D')
     $modsDir = Join-Path $Zomboid 'mods'
-    $backupRoot = Join-Path $Zomboid 'backups\mods-removed-v3'
+    $backupRoot = Join-Path $Zomboid 'backups\mods-removed-v4'
     $stamp = Get-Date -Format 'yyyyMMdd-HHmmss'
     $removed = 0
 

@@ -5,7 +5,7 @@ Instalador do Project Zomboid em primeira/terceira pessoa com Project Viewpoint,
 mods de imersao, HUD, armas e sobrevivencia. Agora voce escolhe entre dois pacotes:
 
   MEDIO    - 38 mods no cliente, 39 IDs no host. E o pacote atual, sem mudancas.
-  AVANCADO - 53 mods no cliente, 54 IDs no host. Adiciona correcoes,
+  AVANCADO - 45 mods no cliente, 46 IDs no host. Adiciona mecanicas e UI,
              realismo, natacao e RV, sem remover os mods do Medio.
 
 REQUISITOS
@@ -48,13 +48,11 @@ de novo. Para forcar um perfil pela linha de comando:
   powershell -ExecutionPolicy Bypass -File .\Install.ps1 -Profile Advanced
 
 O QUE ENTRA NO AVANCADO
-- Correcoes: Surface Fix, Door Fix, Barricade Fix, Light Fix, Viewpoint QOL,
-  Right Click Fix.
-- Imersao: True Weathers Gameplay, Immersive Map, Foraging, Fishing,
-  3D Helicopter Event, True Swimming, Construction 1P.
-- Veiculos: GridRV + GridRVHost.
+- UI: Viewpoint QOL, Right Click Fix.
+- Mecanicas: True Weathers Gameplay, Immersive Map, Foraging, Fishing,
+  True Swimming.
 
-O Avancado NAO inclui 3D Doors, 3D Windows, 3D Curtains, 3D Fences, KK's Tree, WinterFX, Immersive Snow, Tile Fix,
+O Avancado NAO inclui 3D Doors, 3D Windows, 3D Curtains, 3D Fences, RV, Construction, Heli, Surface/Door/Barricade/Light, KK's Tree, WinterFX, Immersive Snow, Tile Fix,
 Rolling Hills, Better Terrain, True Water, Yeah It's Water, Living Props,
 KK's Shelves, Working TVs, Shoot to Thrill, Blood VFX ou Physics & Collision.
 
@@ -64,9 +62,7 @@ O Avancado foi feito para ser adicionado ao save existente:
   ou visuais e nao gravam dados do mundo.
 - True Weathers Gameplay so calcula clima e sentidos em runtime; nao gera mapa.
 - True Swimming e explicitamente seguro para adicionar em save existente.
-- Construction 1P nao altera o terreno ja gerado.
-- GridRV e o unico que cria entidades novas. Ele suporta save existente, mas e
-  WIP: faca backup e lembre que RVs novos so aparecem em areas nao exploradas.
+- O Avancado nao adiciona modelos 3D novos; o mundo 3D fica na base do Medio.
 
 NAO troque de Avancado para Medio no mesmo save depois de usar o RV.
 Restaure o backup ou use um save novo. Medio -> Avancado e aditivo e e seguro
@@ -115,11 +111,9 @@ ATIVACAO E HOST
   Repair.bat .......... repara ZombieBuddy/config apos update da Steam/PZ
 
 O Install.bat atualiza o servertest.ini automaticamente quando ele existe.
-Use -SkipHost se quiser atualizar so o cliente. Medio grava 39 IDs; Avancado 54.
+Use -SkipHost se quiser atualizar so o cliente. Medio grava 39 IDs; Avancado 46.
 Cada amigo precisa do mesmo perfil e da mesma versao do arquivo.
 Com DoLuaChecksum=true, mods diferentes podem impedir a entrada no servidor.
-O GridRVHost precisa estar no host; o Host pelo menu do jogo cuida do bootstrap.
-Servidor dedicado pode precisar do -javaagent extra descrito na pagina do 3D RVs.
 
 SE DER ERRO
 - Le C:\Users\<voce>\Zomboid\console.txt
@@ -154,8 +148,7 @@ SE DER ERRO
   C:\Users\<voce>\Zomboid\viewpoint-live.properties.
 
 DESEMPENHO
-O Avancado e mais pesado principalmente por causa do interior do RV. Testa o FPS
-perto do RV e durante tempestade. Se cair abaixo de 60, desativa o RV primeiro.
+O Avancado usa apenas mecanicas/UI e mantem o 3D da base.
 
 MULTIPLAYER
 - Cada amigo precisa rodar o Install.bat no proprio PC e escolher o mesmo perfil.

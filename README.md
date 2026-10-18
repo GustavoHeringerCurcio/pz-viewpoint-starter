@@ -21,7 +21,7 @@ The installer downloads a versioned mod archive from this repository's GitHub Re
 2. Double-click **`Install.bat`**. It requests administrator permission automatically.
 3. In the console, choose the modpack:
    - `1` + Enter - **Medium** (current pack, 38 client mods)
-   - `2` + Enter - **Advanced** (53 client mods, includes Medium + fixes, realism, swimming, and RV)
+   - `2` + Enter - **Advanced** (45 client mods: mechanics, UI, swimming)
    - Enter alone selects Medium.
 4. Wait for the archive download and extraction. Medium is about 1.1 GB; Advanced is about 1.0 GB.
 5. The ZombieBuddy installer opens. Type:
@@ -41,7 +41,7 @@ The chosen profile is saved in `%USERPROFILE%\Zomboid\ViewpointPacks\profile.txt
 | Profile | Client mods | Host IDs | Archive | Use |
 |---|---:|---:|---|---|
 | **Medium** | 38 | 39 | `mods-v1` | Current pack, unchanged; safest for the existing save |
-| **Advanced** | 53 | 54 | `mods-v3` | Medium + fixes, realism, swimming, and RV |
+| **Advanced** | **45** | **46** | `mods-v3` | Medium + mechanics, UI, swimming |
 
 Advanced is **additive**: it does not remove or replace the Medium mods. It is built on top of the same base groups.
 
@@ -70,11 +70,11 @@ powershell -ExecutionPolicy Bypass -File .\Install.ps1 -Profile Advanced
 
 | Group | Contents |
 |---|---|
-| `Pack8_AdvancedFixes` | Surface Fix, Door Fix, Barricade Fix, Light Fix, Viewpoint QOL, Right Click Fix |
-| `Pack10_AdvancedRealism` | True Weathers Gameplay, Immersive Map, Foraging, Fishing, 3D Helicopter Event, True Swimming, Construction 1P |
-| `Pack11_AdvancedVehicles` | GridRV, GridRVHost |
+| `Pack8_AdvancedFixes` | Viewpoint QOL, Right Click Fix |
+| `Pack10_AdvancedRealism` | True Weathers Gameplay, Immersive Map, Foraging, Fishing, True Swimming |
 
-Advanced deliberately does **not** include the new 3D Doors, 3D Windows, 3D Curtains, or 3D Fences packs, KK's Tree, WinterFX, Immersive Snow, Tile Fix, Rolling Hills, Better Terrain, True Water, Yeah It's Water, Living Props, KK's Shelves, Working TVs, Shoot to Thrill, Blood VFX, or Physics & Collision.
+
+Advanced deliberately does **not** include any new 3D model packs, RV, Construction 1P, 3D Helicopter, Surface/Door/Barricade/Light fixes, KK's Tree, WinterFX, Immersive Snow, Tile Fix, Rolling Hills, Better Terrain, True Water, Yeah It's Water, Living Props, KK's Shelves, Working TVs, Shoot to Thrill, Blood VFX, or Physics & Collision.
 
 ## Save compatibility
 
@@ -83,10 +83,9 @@ Advanced is designed to be added to the existing save:
 - All fixes, UI mods, map, foraging, fishing, and the helicopter are client-side or visual and do not write world data.
 - `True Weathers Gameplay` changes weather and zombie senses at runtime; it does not generate or modify the map.
 - `True Swimming` explicitly supports being added to an existing save.
-- `Construction 1P` adds first-person construction actions; it does not change generated terrain.
-- `GridRV` is the only addition that creates new entities. It supports existing saves, but it is **WIP**: back up the save, and new RVs only spawn in areas that have not been explored yet.
+- The Advanced profile adds no new 3D models or vehicles; it keeps the Medium 3D base.\r\n- There are no new 3D model packs or vehicles in this profile; the 3D world stays on the Medium base.
 
-Do not switch **Advanced -> Medium** on the same save after using an RV. Restore the backup or use a new save instead. Medium -> Advanced is additive and is supported with a backup.
+Changing from Advanced to Medium only changes the active mod list; keep the manual save backup if you want to return later.
 
 Advanced does not include mods that alter terrain, map tiles, roofs, or water, so it does not require a new world.
 
@@ -129,7 +128,7 @@ Configuration files are backed up by the installer to `Zomboid\backups\setup-<da
 - After a Steam/PZ update, run `Repair.bat` (or `Install.bat` again) to restore the ZombieBuddy agent and launchers.
 - `Verify-Packs.ps1` shows which mods are installed. Add `-Profile Medium` or `-Profile Advanced` to inspect a specific pack.
 
-For co-op, every player must install the same profile and the same archive version. With `DoLuaChecksum=true`, mismatched mods can prevent joining. `GridRVHost` is required on the host; in-game Host handles the RV bootstrap automatically. Dedicated servers may need the extra `-javaagent` described on the 3D RVs Workshop page.
+For co-op, every player must install the same profile and the same archive version. With `DoLuaChecksum=true`, mismatched mods can prevent joining.
 
 ## Notes
 
@@ -138,7 +137,7 @@ For co-op, every player must install the same profile and the same archive versi
 - **Bodycam** and **Roofs** are not fully multiplayer-tested.
 - Do not combine with Knox Inventory, Tactical Grid Inventory, Equipment UI, CleanUI, Modern Status, or Clean HotBar.
 - If roofs disappear after fast travel, raise `memory.packMiB` in `%USERPROFILE%\Zomboid\viewpoint-live.properties`.
-- Advanced is heavier than Medium mainly because of the RV interior. Test FPS near an RV and during a storm. If frame rate drops below 60, disable the RV first.
+- Advanced is close to Medium in rendering cost; it adds mechanics and UI only.
 
 ## Troubleshooting
 

@@ -5,7 +5,7 @@ Instalador do Project Zomboid em primeira/terceira pessoa com Project Viewpoint,
 mods de imersao, HUD, armas e sobrevivencia. Agora voce escolhe entre dois pacotes:
 
   MEDIO    - 38 mods no cliente, 39 IDs no host. E o pacote atual, sem mudancas.
-  AVANCADO - 57 mods no cliente, 58 IDs no host. Adiciona correcoes, mundo 3D,
+  AVANCADO - 53 mods no cliente, 54 IDs no host. Adiciona correcoes,
              realismo, natacao e RV, sem remover os mods do Medio.
 
 REQUISITOS
@@ -25,7 +25,7 @@ COMO INSTALAR
    - digita 1 e Enter  -> Medio
    - digita 2 e Enter  -> Avancado
    - Enter sozinho     -> Medio
-4. Espera baixar o pacote escolhido. Medio tem ~1.1 GB; Avancado tem ~1.3 GB.
+4. Espera baixar o pacote escolhido. Medio tem ~1.1 GB; Avancado tem ~1.0 GB.
    Quando aparecer "Extraindo", o download ja terminou; espere 1-3 min.
 5. O instalador do ZombieBuddy vai abrir. No terminal dele:
    - escreve 1 e Enter  (Install ZombieBuddy)
@@ -50,12 +50,11 @@ de novo. Para forcar um perfil pela linha de comando:
 O QUE ENTRA NO AVANCADO
 - Correcoes: Surface Fix, Door Fix, Barricade Fix, Light Fix, Viewpoint QOL,
   Right Click Fix.
-- Mundo 3D: 3D Doors/Gates/Garages, 3D Curtains & Blinds, 3D Windows, 3D Fences.
 - Imersao: True Weathers Gameplay, Immersive Map, Foraging, Fishing,
   3D Helicopter Event, True Swimming, Construction 1P.
 - Veiculos: GridRV + GridRVHost.
 
-O Avancado NAO inclui KK's Tree, WinterFX, Immersive Snow, Tile Fix,
+O Avancado NAO inclui 3D Doors, 3D Windows, 3D Curtains, 3D Fences, KK's Tree, WinterFX, Immersive Snow, Tile Fix,
 Rolling Hills, Better Terrain, True Water, Yeah It's Water, Living Props,
 KK's Shelves, Working TVs, Shoot to Thrill, Blood VFX ou Physics & Collision.
 
@@ -81,7 +80,7 @@ Nao precisa desinstalar nem apagar a pasta mods.
 1. Fecha o Project Zomboid e o host.
 2. Baixa o ZIP atualizado do GitHub (Code > Download ZIP) e extrai.
 3. Roda o Install.bat de dentro da pasta extraida e escolhe 2 (Avancado).
-4. O instalador detecta o marcador antigo, baixa o mods-v2, mantem os mods
+4. O instalador detecta o marcador antigo, baixa o mods-v3, remove os 3D antigos, mantem os mods
    base, adiciona os novos e ativa o perfil Avancado.
 5. Se existir Zomboid\Server\servertest.ini, ele atualiza o host sozinho e
    faz backup do INI.
@@ -116,7 +115,7 @@ ATIVACAO E HOST
   Repair.bat .......... repara ZombieBuddy/config apos update da Steam/PZ
 
 O Install.bat atualiza o servertest.ini automaticamente quando ele existe.
-Use -SkipHost se quiser atualizar so o cliente. Medio grava 39 IDs; Avancado 58.
+Use -SkipHost se quiser atualizar so o cliente. Medio grava 39 IDs; Avancado 54.
 Cada amigo precisa do mesmo perfil e da mesma versao do arquivo.
 Com DoLuaChecksum=true, mods diferentes podem impedir a entrada no servidor.
 O GridRVHost precisa estar no host; o Host pelo menu do jogo cuida do bootstrap.
@@ -133,7 +132,7 @@ SE DER ERRO
   Medio:
   https://github.com/GustavoHeringerCurcio/pz-viewpoint-starter/releases/download/mods-v1/PZ-Viewpoint-Mods.tar
   Avancado:
-  https://github.com/GustavoHeringerCurcio/pz-viewpoint-starter/releases/download/mods-v2/PZ-Viewpoint-Mods-Advanced.tar
+  https://github.com/GustavoHeringerCurcio/pz-viewpoint-starter/releases/download/mods-v3/PZ-Viewpoint-Mods-Advanced.tar
   Salva como %LOCALAPPDATA%\PZViewpoint\archive\<nome do arquivo>
   e roda o Install.bat de novo.
 - Se o Windows rodar direto do ZIP, o Install.bat copia o instalador
@@ -155,9 +154,8 @@ SE DER ERRO
   C:\Users\<voce>\Zomboid\viewpoint-live.properties.
 
 DESEMPENHO
-O Avancado e mais pesado por causa das janelas/portas/cercas 3D e do interior
-do RV. Testa o FPS perto do RV e durante tempestade. Se cair abaixo de 60,
-desativa primeiro 3D Windows, depois 3D Fences, depois o RV.
+O Avancado e mais pesado principalmente por causa do interior do RV. Testa o FPS
+perto do RV e durante tempestade. Se cair abaixo de 60, desativa o RV primeiro.
 
 MULTIPLAYER
 - Cada amigo precisa rodar o Install.bat no proprio PC e escolher o mesmo perfil.

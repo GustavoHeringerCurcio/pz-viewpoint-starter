@@ -286,32 +286,6 @@
                            "ServerOnly":  false
                        }
                    ],
-    "Pack9_AdvancedWorld":  [
-                       {
-                           "Folder":  "BasileDoors3D",
-                           "Workshop":  "3818859807",
-                           "ModID":  "BasileDoors3D",
-                           "ServerOnly":  false
-                       },
-                       {
-                           "Folder":  "DGVCurtains",
-                           "Workshop":  "3818873810",
-                           "ModID":  "DGVCurtains",
-                           "ServerOnly":  false
-                       },
-                       {
-                           "Folder":  "DGVWindows3D",
-                           "Workshop":  "3820833348",
-                           "ModID":  "DGVWindows3D",
-                           "ServerOnly":  false
-                       },
-                       {
-                           "Folder":  "ViewpointFences3D",
-                           "Workshop":  "3814486926",
-                           "ModID":  "ViewpointFences3D",
-                           "ServerOnly":  false
-                       }
-                   ],
     "Pack10_AdvancedRealism":  [
                        {
                            "Folder":  "ViewpointTrueWeathersGameplay",

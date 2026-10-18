@@ -21,9 +21,9 @@ The installer downloads a versioned mod archive from this repository's GitHub Re
 2. Double-click **`Install.bat`**. It requests administrator permission automatically.
 3. In the console, choose the modpack:
    - `1` + Enter - **Medium** (current pack, 38 client mods)
-   - `2` + Enter - **Advanced** (57 client mods, includes Medium + additions)
+   - `2` + Enter - **Advanced** (53 client mods, includes Medium + fixes, realism, swimming, and RV)
    - Enter alone selects Medium.
-4. Wait for the archive download and extraction. Medium is about 1.1 GB; Advanced is about 1.3 GB.
+4. Wait for the archive download and extraction. Medium is about 1.1 GB; Advanced is about 1.0 GB.
 5. The ZombieBuddy installer opens. Type:
    - `1` + Enter - Install ZombieBuddy
    - `2` + Enter - Normal Launch
@@ -41,7 +41,7 @@ The chosen profile is saved in `%USERPROFILE%\Zomboid\ViewpointPacks\profile.txt
 | Profile | Client mods | Host IDs | Archive | Use |
 |---|---:|---:|---|---|
 | **Medium** | 38 | 39 | `mods-v1` | Current pack, unchanged; safest for the existing save |
-| **Advanced** | 57 | 58 | `mods-v2` | Medium + fixes, 3D world, realism, swimming, and RV |
+| **Advanced** | 53 | 54 | `mods-v3` | Medium + fixes, realism, swimming, and RV |
 
 Advanced is **additive**: it does not remove or replace the Medium mods. It is built on top of the same base groups.
 
@@ -71,17 +71,16 @@ powershell -ExecutionPolicy Bypass -File .\Install.ps1 -Profile Advanced
 | Group | Contents |
 |---|---|
 | `Pack8_AdvancedFixes` | Surface Fix, Door Fix, Barricade Fix, Light Fix, Viewpoint QOL, Right Click Fix |
-| `Pack9_AdvancedWorld` | 3D Doors, Gates & Garages; 3D Curtains & Blinds; 3D Windows; 3D Fences |
 | `Pack10_AdvancedRealism` | True Weathers Gameplay, Immersive Map, Foraging, Fishing, 3D Helicopter Event, True Swimming, Construction 1P |
 | `Pack11_AdvancedVehicles` | GridRV, GridRVHost |
 
-Advanced deliberately does **not** include KK's Tree, WinterFX, Immersive Snow, Tile Fix, Rolling Hills, Better Terrain, True Water, Yeah It's Water, Living Props, KK's Shelves, Working TVs, Shoot to Thrill, Blood VFX, or Physics & Collision.
+Advanced deliberately does **not** include the new 3D Doors, 3D Windows, 3D Curtains, or 3D Fences packs, KK's Tree, WinterFX, Immersive Snow, Tile Fix, Rolling Hills, Better Terrain, True Water, Yeah It's Water, Living Props, KK's Shelves, Working TVs, Shoot to Thrill, Blood VFX, or Physics & Collision.
 
 ## Save compatibility
 
 Advanced is designed to be added to the existing save:
 
-- All fixes, UI mods, 3D doors/windows/curtains/fences, map, foraging, fishing, and the helicopter are client-side or visual and do not write world data.
+- All fixes, UI mods, map, foraging, fishing, and the helicopter are client-side or visual and do not write world data.
 - `True Weathers Gameplay` changes weather and zombie senses at runtime; it does not generate or modify the map.
 - `True Swimming` explicitly supports being added to an existing save.
 - `Construction 1P` adds first-person construction actions; it does not change generated terrain.
@@ -98,7 +97,7 @@ You do not need to uninstall the current pack or delete `Zomboid\mods`.
 1. Close Project Zomboid and the host.
 2. Download the latest repository ZIP from GitHub (`Code` -> `Download ZIP`) and extract it to a local folder.
 3. Run `Install.bat` from the extracted folder and choose `2` for Advanced.
-4. The installer detects the old marker hash, downloads `mods-v2`, keeps the base mods, adds the Advanced mods, and activates the new profile.
+4. The installer detects the old marker hash, downloads `mods-v3`, removes the obsolete 3D packs, keeps the base mods, adds the Advanced mods, and activates the new profile.
 5. If `Zomboid\Server\servertest.ini` exists, the installer updates it automatically to the selected profile and backs up the INI.
 6. Every friend must use the same updated installer and choose the same profile.
 
@@ -139,7 +138,7 @@ For co-op, every player must install the same profile and the same archive versi
 - **Bodycam** and **Roofs** are not fully multiplayer-tested.
 - Do not combine with Knox Inventory, Tactical Grid Inventory, Equipment UI, CleanUI, Modern Status, or Clean HotBar.
 - If roofs disappear after fast travel, raise `memory.packMiB` in `%USERPROFILE%\Zomboid\viewpoint-live.properties`.
-- Advanced is heavier than Medium because of 3D windows/doors/fences and the RV interior. Test FPS near an RV and during a storm. If frame rate drops below 60, disable 3D Windows first, then 3D Fences, then the RV.
+- Advanced is heavier than Medium mainly because of the RV interior. Test FPS near an RV and during a storm. If frame rate drops below 60, disable the RV first.
 
 ## Troubleshooting
 
@@ -152,7 +151,7 @@ For co-op, every player must install the same profile and the same archive versi
 - Re-run `Install.bat` if the GitHub archive failed. If GitHub is blocked, run `Install.ps1 -UseSteamCmd -Profile Advanced`.
 - Manual downloads if the installer stalls:
   - Medium: `https://github.com/GustavoHeringerCurcio/pz-viewpoint-starter/releases/download/mods-v1/PZ-Viewpoint-Mods.tar`
-  - Advanced: `https://github.com/GustavoHeringerCurcio/pz-viewpoint-starter/releases/download/mods-v2/PZ-Viewpoint-Mods-Advanced.tar`
+  - Advanced: `https://github.com/GustavoHeringerCurcio/pz-viewpoint-starter/releases/download/mods-v3/PZ-Viewpoint-Mods-Advanced.tar`
   - Save them as `%LOCALAPPDATA%\PZViewpoint\archive\<file name>`, then run `Install.bat` again.
 - If Windows runs it from inside the ZIP, `Install.bat` copies itself to `%LOCALAPPDATA%\PZViewpoint\installer` automatically.
 - If Windows blocks the script: right-click `Install.bat` -> Properties -> Unblock.

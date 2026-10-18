@@ -23,12 +23,12 @@ $ArchiveCatalog = @{
         ReleaseTag = 'mods-v1'
     }
     Advanced = @{
-        Url = 'https://github.com/GustavoHeringerCurcio/pz-viewpoint-starter/releases/download/mods-v2/PZ-Viewpoint-Mods-Advanced.tar'
+        Url = 'https://github.com/GustavoHeringerCurcio/pz-viewpoint-starter/releases/download/mods-v3/PZ-Viewpoint-Mods-Advanced.tar'
         FileName = 'PZ-Viewpoint-Mods-Advanced.tar'
-        Sha256 = 'f5c453de44cb8642e6730ff89ebae53c40dbea4b7fa875241a9ce13ed8085c17'
-        SizeLabel = '~1.3 GB'
+        Sha256 = 'abb58fcb08995847c0d8c8212def05dea69ad441529a31a7ea33e84abac2090c'
+        SizeLabel = '~1.0 GB'
         RequiredGB = 5
-        ReleaseTag = 'mods-v2'
+        ReleaseTag = 'mods-v3'
     }
 }
 
@@ -47,7 +47,7 @@ function Select-Profile {
     Write-Host ""
     Write-Host "Escolha o modpack:" -ForegroundColor Cyan
     Write-Host "  1) Medio    - 38 mods no cliente, o pacote atual" -ForegroundColor White
-    Write-Host "  2) Avancado - 57 mods no cliente, fixes + 3D + natacao + RV" -ForegroundColor White
+    Write-Host "  2) Avancado - 53 mods no cliente, fixes + natacao + RV" -ForegroundColor White
     Write-Host ""
     Write-Host "O Medio e o mais seguro para o save atual. O Avancado adiciona mods" -ForegroundColor DarkGray
     Write-Host "sem remover os atuais." -ForegroundColor DarkGray
@@ -73,7 +73,7 @@ function Write-Step([string]$Text) {
     Write-Host "== $Text ==" -ForegroundColor Cyan
 }
 
-$InstallerVersion = 3
+$InstallerVersion = 4
 
 function Test-InstallerVersion {
     try {
@@ -101,6 +101,29 @@ function Backup-GameFiles([string]$PZ, [string]$Zomboid) {
     $default = Join-Path $Zomboid 'mods\default.txt'
     if (Test-Path -LiteralPath $default) { Copy-Item -LiteralPath $default -Destination (Join-Path $dst 'default.txt') -Force }
     Write-Host "Backup de configuracao: $dst" -ForegroundColor DarkGray
+}
+
+function Remove-ObsoleteMods([string]$Zomboid) {
+    $obsolete = @('BasileDoors3D', 'DGVCurtains', 'DGVWindows3D', 'ViewpointFences3D')
+    $modsDir = Join-Path $Zomboid 'mods'
+    $backupRoot = Join-Path $Zomboid 'backups\mods-removed-v3'
+    $stamp = Get-Date -Format 'yyyyMMdd-HHmmss'
+    $removed = 0
+
+    foreach ($name in $obsolete) {
+        $folder = Join-Path $modsDir $name
+        if (-not (Test-Path -LiteralPath $folder)) { continue }
+        New-Item -ItemType Directory -Path $backupRoot -Force | Out-Null
+        $target = Join-Path $backupRoot ("{0}-{1}" -f $name, $stamp)
+        if (Test-Path -LiteralPath $target) { $target = "$target-$removed" }
+        Move-Item -LiteralPath $folder -Destination $target
+        Write-Host "Removido do pack novo: $name" -ForegroundColor DarkGray
+        $removed++
+    }
+
+    if ($removed -gt 0) {
+        Write-Host "Mods antigos movidos para: $backupRoot" -ForegroundColor DarkGray
+    }
 }
 
 function Get-SteamCmd {
@@ -674,6 +697,11 @@ try {
         }
     } else {
         Write-Host "Download de mods ignorado." -ForegroundColor Yellow
+    }
+
+    if (-not $SkipMods) {
+        Write-Step 'Removendo mods 3D antigos'
+        Remove-ObsoleteMods -Zomboid $zomboid
     }
 
     $zbFailed = $false

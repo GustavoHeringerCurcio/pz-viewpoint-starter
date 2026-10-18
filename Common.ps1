@@ -166,7 +166,6 @@ $script:BaseProfilePacks = @(
 
 $script:AdvancedProfilePacks = @(
     'Pack8_AdvancedFixes',
-    'Pack9_AdvancedWorld',
     'Pack10_AdvancedRealism',
     'Pack11_AdvancedVehicles'
 )

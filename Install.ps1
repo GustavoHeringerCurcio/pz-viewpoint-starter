@@ -316,11 +316,20 @@ function Install-FromArchive {
         Write-Host "[1/5] Obtendo hash SHA256..." -ForegroundColor Yellow
         $expected = $ArchiveSha256
         if (Test-Path -LiteralPath $shaPath) {
-            $expected = ((Get-Content -LiteralPath $shaPath -Raw).Trim() -split '\s+')[0].ToLower()
-        } else {
+            $localHash = ((Get-Content -LiteralPath $shaPath -Raw).Trim() -split '\s+')[0].ToLower()
+            if ($localHash -ne $ArchiveSha256) {
+                Write-Host "      Hash local antigo; usando o hash do instalador." -ForegroundColor DarkGray
+                Remove-Item -LiteralPath $shaPath -Force
+            }
+        }
+        if (-not (Test-Path -LiteralPath $shaPath)) {
             try {
                 Get-RemoteFile -Uri "$ArchiveUrl.sha256" -OutFile $shaPath
-                $expected = ((Get-Content -LiteralPath $shaPath -Raw).Trim() -split '\s+')[0].ToLower()
+                $remoteHash = ((Get-Content -LiteralPath $shaPath -Raw).Trim() -split '\s+')[0].ToLower()
+                if ($remoteHash -ne $ArchiveSha256) {
+                    Remove-Item -LiteralPath $shaPath -Force
+                    Write-Warning 'O hash remoto nao corresponde ao instalador; usando o hash embutido.'
+                }
             } catch {
                 Write-Warning 'Nao foi possivel baixar o hash; usando o hash embutido no instalador.'
             }

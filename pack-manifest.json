@@ -1,4 +1,4 @@
-﻿{
+{
     "Pack1_Core":  [
                        {
                            "Folder":  "ZombieBuddy",
@@ -245,6 +245,128 @@
                            "Folder":  "ViewpointRoofs",
                            "Workshop":  "3817294484",
                            "ModID":  "ViewpointRoofs",
+                           "ServerOnly":  false
+                       }
+                   ],
+    "Pack8_AdvancedFixes":  [
+                       {
+                           "Folder":  "ViewpointSurface",
+                           "Workshop":  "3814398576",
+                           "ModID":  "ViewpointSurface",
+                           "ServerOnly":  false
+                       },
+                       {
+                           "Folder":  "ViewpointDoor",
+                           "Workshop":  "3812151347",
+                           "ModID":  "ViewpointDoor",
+                           "ServerOnly":  false
+                       },
+                       {
+                           "Folder":  "ViewpointBarricade",
+                           "Workshop":  "3815033191",
+                           "ModID":  "ViewpointBarricade",
+                           "ServerOnly":  false
+                       },
+                       {
+                           "Folder":  "ViewpointLight",
+                           "Workshop":  "3811344119",
+                           "ModID":  "ViewpointLight",
+                           "ServerOnly":  false
+                       },
+                       {
+                           "Folder":  "ProjectViewpointQOL",
+                           "Workshop":  "3811256204",
+                           "ModID":  "ProjectViewpointQOL",
+                           "ServerOnly":  false
+                       },
+                       {
+                           "Folder":  "ViewpointRightClick",
+                           "Workshop":  "3819018807",
+                           "ModID":  "ViewpointRightClick",
+                           "ServerOnly":  false
+                       }
+                   ],
+    "Pack9_AdvancedWorld":  [
+                       {
+                           "Folder":  "BasileDoors3D",
+                           "Workshop":  "3818859807",
+                           "ModID":  "BasileDoors3D",
+                           "ServerOnly":  false
+                       },
+                       {
+                           "Folder":  "DGVCurtains",
+                           "Workshop":  "3818873810",
+                           "ModID":  "DGVCurtains",
+                           "ServerOnly":  false
+                       },
+                       {
+                           "Folder":  "DGVWindows3D",
+                           "Workshop":  "3820833348",
+                           "ModID":  "DGVWindows3D",
+                           "ServerOnly":  false
+                       },
+                       {
+                           "Folder":  "ViewpointFences3D",
+                           "Workshop":  "3814486926",
+                           "ModID":  "ViewpointFences3D",
+                           "ServerOnly":  false
+                       }
+                   ],
+    "Pack10_AdvancedRealism":  [
+                       {
+                           "Folder":  "ViewpointTrueWeathersGameplay",
+                           "Workshop":  "3813908957",
+                           "ModID":  "ViewpointTrueWeathersGameplay",
+                           "ServerOnly":  false
+                       },
+                       {
+                           "Folder":  "ViewpointImmersiveMap",
+                           "Workshop":  "3815544725",
+                           "ModID":  "ViewpointImmersiveMap",
+                           "ServerOnly":  false
+                       },
+                       {
+                           "Folder":  "ViewpointForaging",
+                           "Workshop":  "3814994364",
+                           "ModID":  "ViewpointForaging",
+                           "ServerOnly":  false
+                       },
+                       {
+                           "Folder":  "FishingView",
+                           "Workshop":  "3814560827",
+                           "ModID":  "FishingView",
+                           "ServerOnly":  false
+                       },
+                       {
+                           "Folder":  "HeliEvent",
+                           "Workshop":  "3818359767",
+                           "ModID":  "HeliEvent",
+                           "ServerOnly":  false
+                       },
+                       {
+                           "Folder":  "TrueSwimming",
+                           "Workshop":  "3802372726",
+                           "ModID":  "TrueSwimming",
+                           "ServerOnly":  false
+                       },
+                       {
+                           "Folder":  "Construction1PViewpoint",
+                           "Workshop":  "3812312558",
+                           "ModID":  "Construction1PViewpoint",
+                           "ServerOnly":  false
+                       }
+                   ],
+    "Pack11_AdvancedVehicles":  [
+                       {
+                           "Folder":  "GridRVHost",
+                           "Workshop":  "3820158673",
+                           "ModID":  "GridRVHost",
+                           "ServerOnly":  false
+                       },
+                       {
+                           "Folder":  "GridRV",
+                           "Workshop":  "3820158673",
+                           "ModID":  "GridRV",
                            "ServerOnly":  false
                        }
                    ]

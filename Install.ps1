@@ -1,7 +1,10 @@
 param(
+    [ValidateSet('Medium', 'Advanced')]
+    [string]$Profile,
     [switch]$CheckOnly,
     [switch]$SkipMods,
     [switch]$SkipZombieBuddy,
+    [switch]$SkipSaveBackup,
     [switch]$NoActivate,
     [switch]$ForceRedownload,
     [switch]$UseSteamCmd
@@ -10,16 +13,67 @@ param(
 $ErrorActionPreference = 'Stop'
 . (Join-Path $PSScriptRoot 'Common.ps1')
 
-$ArchiveUrl = 'https://github.com/GustavoHeringerCurcio/pz-viewpoint-starter/releases/download/mods-v1/PZ-Viewpoint-Mods.tar'
-$ArchiveFileName = 'PZ-Viewpoint-Mods.tar'
-$ArchiveSha256 = 'f3999811acf25c531772e8d2faf8d20bb4bd0b760b4812dc59eb22d2818a3b5e'
+$ArchiveCatalog = @{
+    Medium = @{
+        Url = 'https://github.com/GustavoHeringerCurcio/pz-viewpoint-starter/releases/download/mods-v1/PZ-Viewpoint-Mods.tar'
+        FileName = 'PZ-Viewpoint-Mods.tar'
+        Sha256 = 'f3999811acf25c531772e8d2faf8d20bb4bd0b760b4812dc59eb22d2818a3b5e'
+        SizeLabel = '~1.1 GB'
+        RequiredGB = 3
+        ReleaseTag = 'mods-v1'
+    }
+    Advanced = @{
+        Url = 'https://github.com/GustavoHeringerCurcio/pz-viewpoint-starter/releases/download/mods-v2/PZ-Viewpoint-Mods-Advanced.tar'
+        FileName = 'PZ-Viewpoint-Mods-Advanced.tar'
+        Sha256 = 'f5c453de44cb8642e6730ff89ebae53c40dbea4b7fa875241a9ce13ed8085c17'
+        SizeLabel = '~1.3 GB'
+        RequiredGB = 5
+        ReleaseTag = 'mods-v2'
+    }
+}
+
+$ArchiveUrl = $ArchiveCatalog.Medium.Url
+$ArchiveFileName = $ArchiveCatalog.Medium.FileName
+$ArchiveSha256 = $ArchiveCatalog.Medium.Sha256
+$ArchiveRequiredGB = $ArchiveCatalog.Medium.RequiredGB
+$ArchiveSizeLabel = $ArchiveCatalog.Medium.SizeLabel
+$ArchiveReleaseTag = $ArchiveCatalog.Medium.ReleaseTag
+
+function Select-Profile {
+    param([string]$Current)
+
+    if ($Current) { return $Current }
+
+    Write-Host ""
+    Write-Host "Escolha o modpack:" -ForegroundColor Cyan
+    Write-Host "  1) Medio    - 38 mods no cliente, o pacote atual" -ForegroundColor White
+    Write-Host "  2) Avancado - 57 mods no cliente, fixes + 3D + natacao + RV" -ForegroundColor White
+    Write-Host ""
+    Write-Host "O Medio e o mais seguro para o save atual. O Avancado adiciona mods" -ForegroundColor DarkGray
+    Write-Host "sem remover os atuais e faz backup do save antes de instalar." -ForegroundColor DarkGray
+    Write-Host ""
+
+    while ($true) {
+        $choice = Read-Host "Digite 1 ou 2 e pressione Enter (Enter = 1)"
+        switch ($choice.Trim().ToLowerInvariant()) {
+            '' { return 'Medium' }
+            '1' { return 'Medium' }
+            '2' { return 'Advanced' }
+            'medio' { return 'Medium' }
+            'medium' { return 'Medium' }
+            'avancado' { return 'Advanced' }
+            'advanced' { return 'Advanced' }
+            default { Write-Host "Opcao invalida. Digite 1 ou 2." -ForegroundColor Yellow }
+        }
+    }
+}
 
 function Write-Step([string]$Text) {
     Write-Host ""
     Write-Host "== $Text ==" -ForegroundColor Cyan
 }
 
-function Backup-GameFiles([string]$PZ, [string]$Zomboid) {
+function Backup-GameFiles([string]$PZ, [string]$Zomboid, [string]$Profile) {
     $stamp = Get-Date -Format 'yyyyMMdd-HHmmss'
     $dst = Join-Path $Zomboid "backups\setup-$stamp"
     New-Item -ItemType Directory -Path $dst -Force | Out-Null
@@ -29,7 +83,23 @@ function Backup-GameFiles([string]$PZ, [string]$Zomboid) {
     }
     $default = Join-Path $Zomboid 'mods\default.txt'
     if (Test-Path -LiteralPath $default) { Copy-Item -LiteralPath $default -Destination (Join-Path $dst 'default.txt') -Force }
-    Write-Host "Backup: $dst" -ForegroundColor DarkGray
+    Write-Host "Backup de configuracao: $dst" -ForegroundColor DarkGray
+
+    if ($Profile -eq 'Advanced' -and -not $SkipSaveBackup) {
+        $saveDst = Join-Path $Zomboid "backups\save-before-advanced-$stamp"
+        New-Item -ItemType Directory -Path $saveDst -Force | Out-Null
+        $multiplayer = Join-Path $Zomboid 'Saves\Multiplayer'
+        if (Test-Path -LiteralPath $multiplayer) {
+            foreach ($save in (Get-ChildItem -LiteralPath $multiplayer -Directory -Filter 'servertest*' -ErrorAction SilentlyContinue)) {
+                Copy-Item -LiteralPath $save.FullName -Destination $saveDst -Recurse -Force
+            }
+        }
+        foreach ($name in @('servertest.ini','servertest_SandboxVars.lua')) {
+            $src = Join-Path (Join-Path $Zomboid 'Server') $name
+            if (Test-Path -LiteralPath $src) { Copy-Item -LiteralPath $src -Destination (Join-Path $saveDst $name) -Force }
+        }
+        Write-Host "Backup do save: $saveDst" -ForegroundColor Green
+    }
 }
 
 function Get-SteamCmd {
@@ -84,7 +154,7 @@ function Test-ArchiveCacheComplete {
     param([string]$ManifestPath)
     $data = Get-Content -LiteralPath $ManifestPath -Raw | ConvertFrom-Json
     $cacheRoot = Get-WorkshopCacheRoot
-    foreach ($p in Get-PackOrder) {
+    foreach ($p in Get-PackOrder -Profile $Profile) {
         foreach ($m in $data.$p) {
             $folder = Join-Path (Join-Path (Join-Path $cacheRoot $m.Workshop) 'mods') $m.Folder
             if (-not (Test-ModInfoFolder -Path $folder)) { return $false }
@@ -129,7 +199,7 @@ function Test-ModsInstalled {
     }
 
     $data = Get-Content -LiteralPath $ManifestPath -Raw | ConvertFrom-Json
-    foreach ($p in Get-PackOrder) {
+    foreach ($p in Get-PackOrder -Profile $Profile) {
         foreach ($m in $data.$p) {
             $folder = Join-Path $modsDir $m.Folder
             if (-not (Test-ModInfoFolder -Path $folder)) { return $false }
@@ -160,10 +230,10 @@ function Move-ArchiveModsToGame {
     $stamp = Get-Date -Format 'yyyyMMdd-HHmmss'
 
     $total = 0
-    foreach ($p in Get-PackOrder) { $total += $data.$p.Count }
+    foreach ($p in Get-PackOrder -Profile $Profile) { $total += $data.$p.Count }
     $index = 0
 
-    foreach ($p in Get-PackOrder) {
+    foreach ($p in Get-PackOrder -Profile $Profile) {
         foreach ($m in $data.$p) {
             $index++
             $src = Join-Path (Join-Path (Join-Path $cacheRoot $m.Workshop) 'mods') $m.Folder
@@ -211,8 +281,8 @@ function Install-FromArchive {
     if ($cacheComplete -and -not $ForceRedownload) {
         Write-Host "[1/5] Cache completo; download e extracao ignorados." -ForegroundColor Green
     } else {
-        $requiredGB = 3
-        if ((Test-Path -LiteralPath $tarPath) -and -not $ForceRedownload) { $requiredGB = 2 }
+        $requiredGB = $ArchiveRequiredGB
+        if ((Test-Path -LiteralPath $tarPath) -and -not $ForceRedownload) { $requiredGB = [Math]::Max(2, $ArchiveRequiredGB - 1) }
         Test-FreeSpace -RequiredGB $requiredGB
         Write-Host "[1/5] Obtendo hash SHA256..." -ForegroundColor Yellow
         $expected = $ArchiveSha256
@@ -238,8 +308,9 @@ function Install-FromArchive {
             if (Test-Path -LiteralPath $tarPath) { Remove-Item -LiteralPath $tarPath -Force }
             Write-Host "[2/5] Baixando pacote de mods do GitHub..." -ForegroundColor Yellow
             Write-Host "      Repo:   github.com/GustavoHeringerCurcio/pz-viewpoint-starter"
-            Write-Host "      Release: mods-v1"
-            Write-Host "      Arquivo: PZ-Viewpoint-Mods.tar (~1.1 GB)"
+            Write-Host "      Release: $ArchiveReleaseTag"
+            Write-Host "      Perfil: $Profile"
+            Write-Host "      Arquivo: $ArchiveFileName ($ArchiveSizeLabel)"
             Write-Host "      Destino: $tarPath"
             $downloadTimer = [Diagnostics.Stopwatch]::StartNew()
             Get-RemoteFile -Uri $ArchiveUrl -OutFile $tarPath -ShowProgress
@@ -296,7 +367,7 @@ function Install-WorkshopItems {
 
     $data = Get-Content -LiteralPath $ManifestPath -Raw | ConvertFrom-Json
     $ids = @()
-    foreach ($p in Get-PackOrder) {
+    foreach ($p in Get-PackOrder -Profile $Profile) {
         foreach ($m in $data.$p) {
             if ($ids -notcontains $m.Workshop) { $ids += $m.Workshop }
         }
@@ -528,16 +599,35 @@ try {
         }
     }
 
+    if (-not $Profile) {
+        if ($CheckOnly) {
+            $Profile = Get-SavedProfile
+        } else {
+            $Profile = Select-Profile
+        }
+    }
+
+    $archive = $ArchiveCatalog[$Profile]
+    $ArchiveUrl = $archive.Url
+    $ArchiveFileName = $archive.FileName
+    $ArchiveSha256 = $archive.Sha256
+    $ArchiveRequiredGB = $archive.RequiredGB
+    $ArchiveSizeLabel = $archive.SizeLabel
+    $ArchiveReleaseTag = $archive.ReleaseTag
+
     $data = Get-PZWorkshopManifest -ScriptRoot $PSScriptRoot
-    $allIds = @()
-    foreach ($p in Get-PackOrder) { foreach ($m in $data.$p) { if ($allIds -notcontains $m.Workshop) { $allIds += $m.Workshop } } }
+    $profileItems = @()
+    foreach ($p in Get-PackOrder -Profile $Profile) { $profileItems += $data.$p }
+    $clientCount = @($profileItems | Where-Object { -not $_.ServerOnly }).Count
+    $allIds = @($profileItems | Select-Object -ExpandProperty Workshop -Unique)
 
     if ($CheckOnly) {
         Write-Host ""
-        Write-Host "CheckOnly: $($allIds.Count) itens no manifesto."
+        Write-Host "Perfil: $Profile"
+        Write-Host "CheckOnly: $($profileItems.Count) entradas, $clientCount no cliente, $($allIds.Count) itens Workshop unicos."
         Write-Host "ZombieBuddy instalado: $(Test-ZombieBuddyInstalled -PZ $pz)"
         $archiveCache = Join-Path (Join-Path (Get-LocalAppData) 'PZViewpoint\archive') $ArchiveFileName
-        Write-Host "Pacote GitHub em cache: $(Test-Path -LiteralPath $archiveCache)"
+        Write-Host "Pacote $Profile em cache: $(Test-Path -LiteralPath $archiveCache)"
         Write-Host "Mods ja instalados: $(Test-ModsInstalled -ManifestPath (Join-Path $PSScriptRoot 'pack-manifest.json'))"
         $default = Join-Path $zomboid 'mods\default.txt'
         if (Test-Path -LiteralPath $default) {
@@ -551,8 +641,10 @@ try {
     if (-not (Test-IsAdmin)) { throw 'Abre o Install.bat e aceita o pedido de administrador.' }
     Assert-GameClosed
     $workshop = Ensure-WorkshopRoot
+    Set-SavedProfile -Profile $Profile
 
-    Backup-GameFiles -PZ $pz -Zomboid $zomboid
+    Write-Host "Perfil selecionado: $Profile ($clientCount mods no cliente)." -ForegroundColor Cyan
+    Backup-GameFiles -PZ $pz -Zomboid $zomboid -Profile $Profile
 
     if (-not $SkipMods) {
         if ($UseSteamCmd) {
@@ -596,18 +688,25 @@ try {
     }
 
     if (-not $NoActivate) {
-        Write-Step 'Ativando todos os mods'
-        & (Join-Path $PSScriptRoot 'Activate-Pack.ps1')
+        Write-Step "Ativando mods do perfil $Profile"
+        & (Join-Path $PSScriptRoot 'Activate-Pack.ps1') -Profile $Profile
     }
 
     Write-Host ""
     if ($zbFailed) {
         Write-Host "MODS ATIVADOS, MAS O ZOMBIEBUDDY FALHOU." -ForegroundColor Yellow
-        Write-Host "Os mods Java (Viewpoint) podem nao carregar. Rode Install.bat de novo ou faça a instalacao manual indicada no README." -ForegroundColor Yellow
+        Write-Host "Os mods Java (Viewpoint) podem nao carregar. Rode Install.bat de novo ou faca a instalacao manual indicada no README." -ForegroundColor Yellow
     } else {
         Write-Host "TUDO PRONTO." -ForegroundColor Green
     }
-    Write-Host "Abre o Project Zomboid e cria um mundo novo." -ForegroundColor White
+    Write-Host "Perfil ativo: $Profile." -ForegroundColor White
+    if ($Profile -eq 'Advanced') {
+        Write-Host "Um backup do save foi criado em Zomboid\backups." -ForegroundColor White
+        Write-Host "Para continuar o save atual, abra o host normalmente. Nao troque para Medio" -ForegroundColor Yellow
+        Write-Host "depois de usar o RV no mesmo save sem restaurar o backup." -ForegroundColor Yellow
+    } else {
+        Write-Host "Abra o Project Zomboid. Para um mundo novo, crie o mundo; para o save atual, continue." -ForegroundColor White
+    }
     Write-Host "Controles: O = primeira pessoa, Shift+O = terceira, MMB = cursor, I = inventario, V = ADS, G = arremessar." -ForegroundColor White
     Write-Host "Se algo falhar, leia o README.txt ou o console.txt em $zomboid." -ForegroundColor White
 } catch {

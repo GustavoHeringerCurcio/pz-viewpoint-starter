@@ -1,8 +1,14 @@
+param(
+    [ValidateSet('Medium', 'Advanced')]
+    [string]$Profile
+)
+
 $ErrorActionPreference = 'Continue'
 . (Join-Path $PSScriptRoot 'Common.ps1')
 
 $data     = Get-PZWorkshopManifest -ScriptRoot $PSScriptRoot
-$order    = Get-PackOrder
+if (-not $Profile) { $Profile = Get-SavedProfile }
+$order    = Get-PackOrder -Profile $Profile
 $modsDir  = Join-Path (Get-ZomboidDir) 'mods'
 $rows     = @()
 
@@ -29,6 +35,7 @@ $rows | Format-Table -AutoSize
 $default = Join-Path $modsDir 'default.txt'
 $marker = Join-Path $modsDir '.pz-viewpoint-installed'
 Write-Host ""
+Write-Host "Perfil: $Profile" -ForegroundColor Cyan
 Write-Host "Marcador de instalacao: $(Test-Path -LiteralPath $marker)" -ForegroundColor Cyan
 Write-Host "default.txt:" -ForegroundColor Cyan
 if (Test-Path -LiteralPath $default) { Get-Content -LiteralPath $default } else { Write-Host 'MISSING' -ForegroundColor Red }

@@ -1,4 +1,6 @@
 param(
+    [ValidateSet('Medium', 'Advanced')]
+    [string]$Profile,
     [switch]$Server
 )
 
@@ -6,7 +8,8 @@ $ErrorActionPreference = 'Stop'
 . (Join-Path $PSScriptRoot 'Common.ps1')
 
 $data      = Get-PZWorkshopManifest -ScriptRoot $PSScriptRoot
-$order     = Get-PackOrder
+if (-not $Profile) { $Profile = Get-SavedProfile }
+$order     = Get-PackOrder -Profile $Profile
 $modsDir   = Join-Path (Get-ZomboidDir) 'mods'
 $default   = Join-Path $modsDir 'default.txt'
 $backupDir = Join-Path (Get-ZomboidDir) 'backups'
@@ -55,7 +58,7 @@ $lines += ''
 Set-Content -LiteralPath $default -Value $lines -Encoding ASCII
 
 Write-Host ""
-Write-Host "Ativados todos os mods." -ForegroundColor Green
+Write-Host "Perfil ativado: $Profile" -ForegroundColor Green
 Write-Host "Modulos de servidor: $([bool]$Server)" -ForegroundColor Cyan
 Write-Host "Mods escritos no default.txt: $($ids.Count)" -ForegroundColor Cyan
 Write-Host "Backup: $backupDir\default.txt.bak" -ForegroundColor DarkGray

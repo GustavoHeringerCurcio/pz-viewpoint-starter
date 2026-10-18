@@ -154,6 +154,58 @@ function Get-PZWorkshopManifest {
     return Get-Content -LiteralPath $path -Raw | ConvertFrom-Json
 }
 
+$script:BaseProfilePacks = @(
+    'Pack1_Core',
+    'Pack2_Tactical',
+    'Pack3_Atmosphere',
+    'Pack4_Survival',
+    'Pack5_QoL',
+    'Pack6_Extras',
+    'Pack7_Immersion'
+)
+
+$script:AdvancedProfilePacks = @(
+    'Pack8_AdvancedFixes',
+    'Pack9_AdvancedWorld',
+    'Pack10_AdvancedRealism',
+    'Pack11_AdvancedVehicles'
+)
+
 function Get-PackOrder {
-    return @('Pack1_Core','Pack2_Tactical','Pack3_Atmosphere','Pack4_Survival','Pack5_QoL','Pack6_Extras','Pack7_Immersion')
+    param(
+        [ValidateSet('Medium', 'Advanced')]
+        [string]$Profile = 'Medium'
+    )
+
+    $packs = @($script:BaseProfilePacks)
+    if ($Profile -eq 'Advanced') {
+        $packs += $script:AdvancedProfilePacks
+    }
+    return $packs
+}
+
+function Get-ProfilePath {
+    $dir = Join-Path (Get-ZomboidDir) 'ViewpointPacks'
+    return Join-Path $dir 'profile.txt'
+}
+
+function Get-SavedProfile {
+    $path = Get-ProfilePath
+    if (Test-Path -LiteralPath $path) {
+        $value = (Get-Content -LiteralPath $path -Raw).Trim()
+        if ($value -in @('Medium', 'Advanced')) { return $value }
+    }
+    return 'Medium'
+}
+
+function Set-SavedProfile {
+    param(
+        [ValidateSet('Medium', 'Advanced')]
+        [string]$Profile
+    )
+
+    $path = Get-ProfilePath
+    $dir = Split-Path $path -Parent
+    New-Item -ItemType Directory -Path $dir -Force | Out-Null
+    Set-Content -LiteralPath $path -Value $Profile -Encoding ASCII
 }

@@ -1,4 +1,6 @@
 param(
+    [ValidateSet('Medium', 'Advanced')]
+    [string]$Profile,
     [switch]$Apply
 )
 
@@ -6,7 +8,8 @@ $ErrorActionPreference = 'Stop'
 . (Join-Path $PSScriptRoot 'Common.ps1')
 
 $data  = Get-PZWorkshopManifest -ScriptRoot $PSScriptRoot
-$order = Get-PackOrder
+if (-not $Profile) { $Profile = Get-SavedProfile }
+$order = Get-PackOrder -Profile $Profile
 $ids   = New-Object System.Collections.Generic.List[string]
 
 foreach ($packName in $order) {
@@ -16,6 +19,7 @@ foreach ($packName in $order) {
 }
 
 $modsLine = 'Mods=' + ($ids -join ';')
+Write-Host "Perfil: $Profile" -ForegroundColor Cyan
 Write-Host "Mods para o host: $($ids.Count)" -ForegroundColor Cyan
 Write-Host $modsLine
 
